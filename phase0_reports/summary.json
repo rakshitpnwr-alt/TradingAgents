@@ -1,0 +1,8 @@
+[
+  {
+    "ticker": "BTC-USD",
+    "decision": "Hold",
+    "seconds": 436,
+    "report": "phase0_reports/BTC-USD/complete_report.md"
+  }
+]
