@@ -131,6 +131,18 @@ DEFAULT_CONFIG = _apply_env_overrides({
         "ECB Bank of England BOJ central bank policy",
         "oil commodities supply chain energy",
     ],
+    # Point-in-time archive of every payload the agents saw. Off-by-default
+    # would lose data that cannot be recovered later, so it defaults on; the
+    # writes are best-effort and never break a run.
+    "archive_enabled": True,
+    "archive_dir": os.getenv("TRADINGAGENTS_ARCHIVE_DIR", os.path.join(_TRADINGAGENTS_HOME, "archive")),
+    # Subreddits searched by the sentiment analyst, per asset type. The stock
+    # list is US-equity shaped and returns nothing for crypto pairs, so crypto
+    # gets its own list. Override either per deployment.
+    "reddit_subreddits": {
+        "stock":  ["wallstreetbets", "stocks", "investing"],
+        "crypto": ["CryptoCurrency", "Bitcoin", "BitcoinMarkets"],
+    },
     # Data vendor configuration
     # Category-level configuration (default for all tools in category).
     # The configured value is the exact vendor chain — requests are NOT silently

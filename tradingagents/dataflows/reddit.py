@@ -36,6 +36,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from .date_window import in_window
+from .archive import archived
 from .symbol_utils import crypto_base
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,25 @@ _ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
 # discussion. wallstreetbets has the most volume but most noise; stocks /
 # investing trend more measured. Caller can override.
 DEFAULT_SUBREDDITS = ("wallstreetbets", "stocks", "investing")
+
+# US-equity subreddits return essentially nothing for a crypto pair: a BTC-USD
+# run searched all three and found zero posts, leaving the sentiment analyst on
+# StockTwits alone. Crypto discussion lives in its own subreddits.
+CRYPTO_SUBREDDITS = ("CryptoCurrency", "Bitcoin", "BitcoinMarkets")
+
+
+def resolve_subreddits(is_crypto: bool) -> tuple[str, ...]:
+    """Subreddits for this asset type, config-overridable."""
+    try:
+        from .config import get_config
+        configured = (get_config().get("reddit_subreddits") or {}).get(
+            "crypto" if is_crypto else "stock"
+        )
+        if configured:
+            return tuple(configured)
+    except Exception:
+        pass
+    return CRYPTO_SUBREDDITS if is_crypto else DEFAULT_SUBREDDITS
 
 
 def _search_qs(ticker: str, limit: int) -> str:
@@ -261,9 +281,10 @@ def _fetch_subreddit(
     return _fetch_subreddit_rss(ticker, sub, limit, timeout, _retry=_retry)
 
 
+@archived("reddit")
 def fetch_reddit_posts(
     ticker: str,
-    subreddits: Iterable[str] = DEFAULT_SUBREDDITS,
+    subreddits: Iterable[str] | None = None,
     limit_per_sub: int = 5,
     timeout: float = 10.0,
     inter_request_delay: float = 1.0,
@@ -283,7 +304,10 @@ def fetch_reddit_posts(
     """
     # Crypto reaches us as a Yahoo pair (BTC-USD); search Reddit for the base
     # ("BTC") so the query actually matches discussion instead of near-nothing.
-    ticker = crypto_base(ticker) or ticker
+    base = crypto_base(ticker)
+    ticker = base or ticker
+    if subreddits is None:
+        subreddits = resolve_subreddits(is_crypto=base is not None)
     subreddits = list(subreddits)
     blocks = []
     total_posts = 0

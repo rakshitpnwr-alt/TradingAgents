@@ -21,6 +21,7 @@ import logging
 from datetime import datetime
 from urllib.request import Request, urlopen
 
+from .archive import archived
 from .date_window import in_window
 from .symbol_utils import crypto_base
 
@@ -64,6 +65,7 @@ def _stocktwits_symbol(ticker: str) -> str:
     return f"{base}.X" if base else ticker.strip().upper()
 
 
+@archived("stocktwits")
 def fetch_stocktwits_messages(
     ticker: str,
     limit: int = 30,
