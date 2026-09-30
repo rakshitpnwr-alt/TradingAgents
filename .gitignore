@@ -221,3 +221,6 @@ __marimo__/
 # Enterprise env file (secrets) and generated run reports
 .env.enterprise
 reports/
+
+# Archive quarantine: test-fixture records separated out of the real archive
+_test-fixtures-*.jsonl

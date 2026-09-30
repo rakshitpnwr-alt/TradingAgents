@@ -22,6 +22,7 @@ import functools
 import json
 import logging
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -34,6 +35,13 @@ _MAX_REPR = 2_000_000
 
 def _archive_dir() -> Path | None:
     """Resolve the archive root from config, or None when archiving is off."""
+    # The suite mocks every vendor, so archiving during a test run fills the
+    # archive with fixtures that are indistinguishable from real fetches
+    # afterwards -- 272 of them, on tickers never actually analysed, before
+    # this guard existed. An archive whose provenance is uncertain cannot
+    # settle the questions it exists to settle.
+    if os.environ.get("PYTEST_CURRENT_TEST") or "pytest" in sys.modules:
+        return None
     try:
         from .config import get_config
 
