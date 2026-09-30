@@ -1,10 +1,13 @@
 """The memory log: an append-only markdown record of each decision and, once settled, its outcome."""
 
+import logging
 import re
 from pathlib import Path
 
 from tradingagents.agents.rating import parse_rating
 from tradingagents.dataflows.files import locked
+
+logger = logging.getLogger(__name__)
 
 
 class TradingMemoryLog:
@@ -47,16 +50,51 @@ class TradingMemoryLog:
             # for this ticker and date blocks another, pending or settled: a re-run
             # after the outcome landed would otherwise count the same decision twice
             # in past context and in every aggregate over the log.
+            rating = rating or parse_rating(final_trade_decision)
             if self._log_path.exists():
                 raw = self._log_path.read_text(encoding="utf-8")
                 for line in raw.splitlines():
                     if line.startswith(f"[{trade_date} | {ticker} |") and line.endswith("]"):
+                        # The stored call stands -- counting this one too would
+                        # double-weight a single ticker-date in every aggregate.
+                        # But a re-run reaching a DIFFERENT rating is not a
+                        # duplicate, it is evidence the pipeline is not
+                        # reproducible on this input, and dropping it in silence
+                        # hides exactly the signal worth having. Record it beside
+                        # the log, where nothing parses or sums it.
+                        self._note_divergence(line, trade_date, ticker, rating)
                         return
-            rating = rating or parse_rating(final_trade_decision)
             tag = f"[{trade_date} | {ticker} | {rating} | pending]"
             entry = f"{tag}\n\nDECISION:\n{final_trade_decision}{self._SEPARATOR}"
             with open(self._log_path, "a", encoding="utf-8") as f:
                 f.write(entry)
+
+    def _note_divergence(self, stored_line: str, trade_date: str, ticker: str, rating: str) -> None:
+        """Record a re-run whose rating differs from the stored one.
+
+        Written to a sidecar file, never to the decision log: the log's entries
+        are parsed and aggregated, and a second entry for one ticker-date would
+        corrupt both. Best-effort -- a failure here must not break a run.
+        """
+        try:
+            fields = [f.strip() for f in stored_line.strip()[1:-1].split("|")]
+            stored_rating = fields[2] if len(fields) > 2 else "?"
+            if stored_rating == rating:
+                return  # same answer twice: genuinely idempotent, nothing to say
+            logger.warning(
+                "%s on %s: re-run rated %s but %s is already logged; keeping the "
+                "logged call. The pipeline is not reproducible on this input.",
+                ticker, trade_date, rating, stored_rating,
+            )
+            sidecar = self._log_path.with_suffix(".divergences.md")
+            from datetime import datetime, timezone
+            with open(sidecar, "a", encoding="utf-8") as f:
+                f.write(
+                    f"[{trade_date} | {ticker} | logged:{stored_rating} | "
+                    f"rerun:{rating} | seen:{datetime.now(timezone.utc).isoformat()}]\n"
+                )
+        except Exception as exc:  # pragma: no cover - never load-bearing
+            logger.debug("could not record divergence: %s", exc)
 
     # --- Read ---
 

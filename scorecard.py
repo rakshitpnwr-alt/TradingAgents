@@ -79,6 +79,19 @@ else:
     print("\nNothing settled yet. A call settles on a later run for the same")
     print("ticker, once its holding window has fully traded.")
 
+side = log.with_suffix(".divergences.md")
+if side.exists():
+    div = [l.strip() for l in side.read_text().splitlines() if l.startswith("[")]
+    if div:
+        print(f"\nReproducibility: {len(div)} re-run(s) reached a different verdict")
+        print("on an input already logged. The logged call stands; the re-run is")
+        print("shown here because a changed answer on identical inputs is a")
+        print("property of the system worth knowing, not a duplicate.")
+        for d in div:
+            f = [x.strip() for x in d[1:-1].split("|")]
+            print(f"  {f[0]:<12} {f[1]:<10} logged {f[2].split(':')[-1]:<12} "
+                  f"re-run {f[3].split(':')[-1]}")
+
 if len(set(r["rating"] for r in rows)) == 1 and len(rows) >= 3:
     print(f"\nEvery call so far is the same verdict ({rows[0]['rating']}). Worth")
     print("watching: a system that never commits can never be scored.")
