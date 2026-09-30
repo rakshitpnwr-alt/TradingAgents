@@ -1,11 +1,11 @@
 **Action**: Hold
 
-**Reasoning**: Trend remains bullish (price > 50 SMA > 200 SMA, MACD positive, RSI 60), but momentum is cooling after the Sept 21 breakout: MACD histogram flipped negative, RSI retreating from overbought, ATR contracting. Price at $83,361 is extended ~8.5% above the 50 SMA, making fresh longs here poor risk/reward; both bull and bear cases converge on waiting for a better entry rather than chasing strength or shorting an intact uptrend. Maintain existing exposure, plan to add on a confirmed retest of the $76,900-$81,000 support zone with momentum stabilization, and treat a decisive close below the 50 SMA as a genuine trend-risk signal.
+**Reasoning**: Price ($83,396.63) sits in a genuine inflection zone: bullish MA stack (price>10EMA>50SMA>200SMA) intact, RSI neutral-bullish (60.46), volume confirming (VWMA rising), but MACD histogram just flipped negative after a monotonic 8-reading decay from the Sep 21 blow-off top, and macro (yield spike, no Fed cuts priced) is a headwind. Neither the bull structural case nor the bear momentum/macro case is decisive yet, and both agree $80,900 (Bollinger mid-band) is the key line in the sand. Best course is to maintain standard-weight exposure without adding into a cooling rally, trimming only if currently overweight from the run-up, while defining hard triggers for the next directional move.
 
-**Entry Price**: 80938.0
+**Entry Price**: 80950.0
 
-**Stop Loss**: 76867.0
+**Stop Loss**: 76800.0
 
-**Position Sizing**: No new capital deployed at current price ($83,361); hold core position. Reserve dry powder to add up to 15-20% of target allocation on a confirmed retest of the $76,900-$81,000 zone with MACD histogram turning positive and RSI basing above 50. Optional discretionary trim of 10-20% of position into strength above $83k for overweight holders.
+**Position Sizing**: Maintain standard/neutral weight on existing core BTC-USD exposure; do not add here. If oversized from the recent run-up, trim ~10-15% back toward standard weight to bank gains. Reserve fresh capital (e.g. 3-5% of portfolio in tranches) to add only on a confirmed reclaim above $86,600 with MACD histogram back above zero; conversely, cut exposure toward underweight on a confirmed daily close below the $80,900 Bollinger mid-band, targeting the 50-SMA ~$76,867 as next support. Size any tactical trades conservatively given ATR ~$2,109 and use staged orders.
 
 FINAL TRANSACTION PROPOSAL: **HOLD**

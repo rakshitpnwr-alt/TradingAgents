@@ -51,7 +51,10 @@ for ticker in TICKERS:
         summary.append({"ticker": ticker, "error": f"{type(e).__name__}: {e}"})
         continue
     elapsed = time.time() - t0
-    path = ta.save_reports(final_state, ticker, save_path=OUT / ticker)
+    # Dated directory per run: the first two runs both wrote to
+    # phase0_reports/<ticker>/ and the second silently overwrote the first.
+    # A decision log has to accumulate, not clobber.
+    path = ta.save_reports(final_state, ticker, save_path=OUT / ticker / TRADE_DATE)
     print(f"  ✓ {decision}   ({elapsed:.0f}s)  →  {path}")
     summary.append({"ticker": ticker, "decision": str(decision),
                     "seconds": round(elapsed), "report": str(path)})

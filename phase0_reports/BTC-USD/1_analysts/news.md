@@ -1,49 +1,54 @@
-# BTC-USD (Bitcoin USD) — Weekly Macro & News Report
-**Date: 2026-09-30**
+# BTC-USD Market & Macro Report — Week of 2026-09-23 to 2026-09-30
 
-## Summary
-Direct BTC-USD news feeds returned no results this cycle, so this report leans on cross-checked prediction-market data (Polymarket) and broader macro/global news flow to infer the trading environment. Data-vendor access to FRED macro series (fed funds rate, CPI, 10Y yield, yield curve, VIX) was unavailable this session (missing API key) — figures below are therefore qualitative/market-implied rather than hard FRED prints, and should be corroborated once the data feed is restored.
+## Executive Summary
+Direct BTC-specific news coverage was unavailable via the news vendor for this window, but a rich picture emerges from macro data and prediction markets. The dominant theme is a **sharp back-up in long-end Treasury yields** (10Y at 5.24%, up ~55bp in three weeks) even as the Fed funds rate has been cut steadily since late 2025 (4.22% → 3.63%). This "long-end sells off while front-end easing" dynamic, combined with a re-steepening yield curve (10Y-2Y spread rising from ~0.20 to 0.37 in two weeks), signals markets are pricing in **persistent inflation risk and/or term-premium repricing** rather than recession fear. CPI is still running ~3% YoY and re-accelerated in Q1/Q2 2026 before flattening. VIX remains subdued (~16), suggesting equity/risk markets are not panicking, but the rates move is a headwind for long-duration, high-beta risk assets like Bitcoin.
 
-## Key Findings
+Prediction markets show virtually **zero probability of further Fed cuts in 2026** (96% "no cuts" priced), a hawkish repricing from earlier expectations of continued easing. Bitcoin-specific prediction markets show odds of BTC reaching $100k by year-end have **fallen 7 points in the past week to 34%**, while downside scenarios ($45k-$55k dip) carry 5-10% probability — indicating the crowd has turned more cautious/neutral on a year-end rally, likely in sympathy with the yield spike.
 
-**1. Bitcoin price action (market-implied, Polymarket):**
-Prediction markets pricing BTC levels for 9/30 show the crowd assigning near-zero probability to BTC trading below $74,000, with the modal outcome clustering in the $80,000–$88,000 range (highest single-bucket probability ~6% for $80k–$82k, ~2% for $86k–$88k — these are thin/fragmented buckets suggesting a wide but moderate distribution, likely reflecting current spot trading somewhere in the high-$70k to high-$80k zone). This implies BTC has NOT experienced a sharp crash and is holding well above the $74k downside threshold that traders were hedging against.
+## Macro Backdrop
 
-**2. Fed policy path — markets pricing a "no cut" 2026:**
-Polymarket's Fed rate-cut markets show a striking 96% probability assigned to "no Fed rate cuts happen in 2026," while probabilities for any multi-cut scenario (6, 9, 10, 11, 12+ cuts) are effectively 0%. This is a materially hawkish/steady-hold repricing versus earlier-year expectations of an active cutting cycle — a headwind for risk assets broadly, including crypto, since the market is no longer pricing loosening liquidity conditions in 2026.
+**Federal Funds Rate**: Down from 4.22% (Sep 2025) to 3.63% (Aug 2026), a cumulative ~60bp of cuts, but the rate has been flat at 3.63-3.64% since January 2026 — the easing cycle appears to have paused/stalled.
 
-**3. Recession risk — still low but non-trivial:**
-- US recession by end of 2026: 8% implied probability (elevated ~$2.2M volume, decent liquidity) — low but not dismissible.
-- UK recession in 2026: 10%, +5.5pp move over the past week — rising.
-- Japan recession in 2026: 4%, modestly rising (+0.5pp).
-Overall, no major economy is pricing a high-probability recession, supporting a "soft landing" base case that is broadly risk-asset supportive, though the UK's rising trend bears watching for global risk sentiment spillover.
+**CPI**: Index rose from 324.2 to 334.1 (Sep 2025–Aug 2026), a 3.05% YoY increase. Notably CPI accelerated sharply March–May 2026 (327→334) before a slight pullback/plateau in June-August. Inflation is running above the Fed's 2% target, which helps explain why cuts have paused.
 
-**4. Global news flow — mortgage rates and tech dominate, no direct crypto catalysts:**
-- US mortgage rates hit 7.58%, approaching a 3-year high — signals persistently tight financial conditions and higher-for-longer real rates, consistent with the "no cuts in 2026" pricing above. Higher long-end rates are typically a mild headwind for non-yielding assets like Bitcoin.
-- Heavy tech/AI-related corporate news (IBM-Nvidia partnerships, digital transformation market reports, S&P 500 tech concentration commentary) dominates headlines — indicates continued strong risk appetite/momentum in tech and AI equities, which have historically shown correlated risk-on flows with BTC. No negative regulatory or systemic-risk headlines for crypto found in this window.
-- No crypto-specific regulatory or ETF-related prediction markets were currently open, suggesting no major near-term binary regulatory catalyst is being actively priced by the market this week.
+**10-Year Treasury Yield**: Sharp and rapid rise from ~4.7% in early August to **5.24%** on Sep 28 — a ~55bp increase in less than two months, with much of the move concentrated in the last two weeks of September (4.96%→5.24%). This is a significant risk-off signal for duration-sensitive and speculative assets.
 
-## Trading Implications
-- **Macro backdrop is mixed-to-cautious for BTC**: A "higher for longer" Fed (96% probability of zero cuts in 2026 per prediction markets) combined with mortgage rates near 3-year highs suggests financial conditions remain tight, which is a structural headwind for risk assets, including crypto, relative to a cutting-cycle scenario.
-- **However, recession risk remains low** (8% US, single digits elsewhere), meaning the macro base case is still "resilient economy, tight but not tightening further" rather than a recessionary risk-off scenario — this supports continued risk-on positioning rather than a defensive stance.
-- **BTC price stability**: Market pricing implies BTC is trading comfortably above the $74k floor with distribution concentrated in the high-$70k/$80s range — no signs of imminent capitulation being priced by derivatives/prediction markets.
-- **Absence of direct negative catalysts**: No adverse regulatory, security, or exchange-specific headlines surfaced. Absence of news is itself notable — the asset is trading on macro/liquidity narrative rather than idiosyncratic catalysts this week.
-- **Watch items**: (1) any repricing of the "no cuts in 2026" consensus (a shift toward cuts being priced back in would likely be bullish for BTC); (2) UK recession odds trending up — a leading indicator worth monitoring for global risk sentiment; (3) mortgage/long-end rate trajectory as a proxy for real rates pressure on non-yielding assets.
+**Yield Curve (10Y-2Y)**: Re-steepening from 0.20 (Sep 21) to 0.37 (Sep 29). A steepening curve alongside rising long yields typically reflects a "bear steepener" — markets pricing higher term premium/inflation risk rather than a recession-driven flight to the front end.
 
-## Recommendation
-Given resilient BTC pricing above key downside thresholds, low but rising global recession risk, and a hawkish-but-stable rate backdrop with no acute negative catalysts, a **neutral-to-cautiously-constructive HOLD** stance is warranted pending confirmation of the Fed path and macro data (once FRED access is restored) and until BTC-specific news catalysts emerge.
+**VIX**: Range-bound 14-18, currently 16.07 — equity volatility is calm despite the bond market turbulence, suggesting the yield move hasn't yet triggered a broader risk-asset unwind, but the disconnect is worth monitoring.
 
-FINAL TRANSACTION PROPOSAL: **HOLD**
+## Prediction Market Signals
 
-| Category | Key Data Point | Source | Trading Read-through |
+- **Fed policy**: 96% probability priced for **zero rate cuts in 2026** — markets have essentially abandoned hope for near-term easing, consistent with the fed funds rate having been flat since January and inflation running hot.
+- **Recession risk**: Low — only 8% for a US recession by end-2026, 10% UK, 4% Japan. No broad-based hard-landing fear priced.
+- **Bitcoin price targets (year-end 2026)**:
+  - $100k by Dec 31: **34%** (down sharply from higher levels a week ago, -7pp)
+  - $250k by Dec 31: only 1%
+  - Dip to $55k: 10%; dip to $50k: 7%; dip to $45k: 5%; dip to $15k: ~0%
+  - Net read: the crowd sees BTC most likely trading in a broad $55k-$100k+ range into year-end, with the bullish $100k+ scenario losing momentum as rates rise, but no capitulation/crash scenario gaining traction either.
+
+## Trading Implications for BTC-USD
+
+1. **Rising real/nominal yields are a headwind.** BTC, as a long-duration/high-beta risk asset, tends to trade inversely with real rates. The 55bp+ surge in the 10Y since early August is a bearish cross-asset signal — watch for continued yield pressure as a drag on crypto risk appetite.
+2. **Fed on hold = less liquidity tailwind.** With 96% odds of no further cuts priced for 2026, the "easy money" narrative that often fuels crypto rallies has stalled. This removes a key bullish catalyst that was present in late 2025.
+3. **Falling odds of $100k BTC (34%, -7pp week-over-week)** suggest sentiment has cooled meaningfully; traders should watch for further deterioration if yields keep climbing, which could accelerate downside repricing toward the $55k-$74k zone implied by dip-scenario pricing.
+4. **No recession/crash signal** — low recession probabilities and contained VIX suggest this is a rates/positioning story, not a systemic risk-off event yet. This argues against extreme bearish tail positioning, but favors a defensive/neutral stance over aggressive long exposure until yields stabilize.
+5. **Inflation stickiness (3% CPI, re-acceleration earlier in 2026)** cuts both ways for BTC: bullish for the "digital gold"/inflation-hedge narrative long-term, but bearish near-term if it keeps the Fed on hold and yields elevated.
+
+## Key Table
+
+| Indicator/Signal | Latest Value | Recent Trend | Implication for BTC-USD |
 |---|---|---|---|
-| BTC price (implied) | Near-0% chance BTC <$74k on 9/30; modal range ~$80k–$88k | Polymarket | Price stability, no crash risk being priced |
-| Fed policy | 96% probability of ZERO Fed rate cuts in 2026 | Polymarket | Hawkish/steady-hold headwind for risk assets |
-| US recession risk | 8% probability by end-2026 | Polymarket | Low recession risk = risk-on supportive |
-| UK recession risk | 10% probability, +5.5pp last week | Polymarket | Rising risk to watch for global spillover |
-| Japan recession risk | 4% probability, +0.5pp last week | Polymarket | Marginal, low priority |
-| Mortgage rates | 7.58%, near 3-year high | Yahoo Finance | Tight financial conditions, headwind for non-yield assets |
-| Tech/AI sector | Heavy positive news flow (IBM/Nvidia, digital transformation reports) | Yahoo Finance/GlobeNewswire | Risk-on tech sentiment, potential correlated tailwind for BTC |
-| BTC-specific news | No news found in past 1–2 weeks | Direct ticker search | No idiosyncratic catalyst; trading on macro narrative |
-| FRED macro data (CPI, Fed funds, 10Y, yield curve, VIX) | Unavailable (API key missing) | N/A | Data gap — recommend re-pull once available |
-| Crypto regulation/ETF markets | No open prediction markets found | Polymarket | No major binary regulatory catalyst priced this week |
+| Fed Funds Rate | 3.63% (Aug 2026) | Flat since Jan 2026 after cuts from 4.22% | Easing cycle stalled — reduced liquidity tailwind |
+| CPI YoY | ~3.05% | Accelerated Mar-May, plateaued since | Above-target inflation keeps Fed cautious |
+| 10Y Treasury Yield | 5.24% (Sep 28) | +55bp since early Aug, sharp acceleration late Sep | Bearish for long-duration risk assets like BTC |
+| 10Y-2Y Curve | 0.37% (Sep 29) | Re-steepening from 0.20 (bear steepener) | Signals inflation/term-premium risk, not recession |
+| VIX | 16.07 | Range-bound 14-18 | Equity risk calm; disconnect vs. bond volatility |
+| Fed: no cuts in 2026 | 96% Yes | — | Hawkish repricing; crypto liquidity tailwind removed |
+| US Recession by EOY 2026 | 8% Yes | — | Low recession risk; not a hard-landing story |
+| BTC ≥ $100k by Dec 31, 2026 | 34% Yes | -7pp in past week | Bullish momentum fading |
+| BTC dip to $55k by Dec 31, 2026 | 10% Yes | — | Modest downside tail risk priced |
+| BTC dip to $45k by Dec 31, 2026 | 5% Yes | — | Low but non-trivial crash risk priced |
+| Direct BTC news (past week) | Unavailable | Vendor limitation | Rely on macro/prediction-market proxies |
+
+**Bottom line:** The macro tape has turned modestly hostile for BTC-USD — surging long yields, a stalled Fed, and fading crowd optimism on a $100k year-end target — even though systemic/recession risk remains low. A cautious-to-neutral stance is warranted until the 10Y yield stabilizes or reverses; a continued yield spike above 5.25-5.5% would likely pressure BTC toward the $55k-$74k zone the market is now assigning modest probability to.
