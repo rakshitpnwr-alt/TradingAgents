@@ -198,7 +198,7 @@ def no_data_available(error: NoMarketDataError) -> str:
     )
 
 
-@archived("vendor")
+@archived("vendor", method_arg=True)
 def route_to_vendor(method: str, *args, **kwargs):
     """Route method calls to appropriate vendor implementation with fallback support."""
     category = get_category_for_method(method)

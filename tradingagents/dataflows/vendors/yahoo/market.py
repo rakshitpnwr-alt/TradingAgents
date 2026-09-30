@@ -216,8 +216,15 @@ def _missing_value_label(symbol: str, date_str: str) -> str:
     from datetime import date
 
     if crypto_base(symbol) is None:
-        y, m, d = (int(part) for part in date_str.split("-"))
-        if date(y, m, d).weekday() >= 5:
+        try:
+            y, mth, d = (int(part) for part in str(date_str).split("-"))
+            weekend = date(y, mth, d).weekday() >= 5
+        except (ValueError, TypeError):
+            # An unparseable date is not evidence of a weekend. Fall through to
+            # the claim that asserts nothing rather than raising from inside a
+            # helper whose entire purpose is to describe absent data calmly.
+            weekend = False
+        if weekend:
             return "N/A: Not a trading day (weekend)"
     return "N/A: no data for this date (the vendor returned no row)"
 

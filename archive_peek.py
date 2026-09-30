@@ -42,7 +42,13 @@ for f in sorted(day.glob("*.jsonl")):
 records.sort(key=lambda r: r.get("fetched_at", ""))
 
 if len(sys.argv) >= 3:
-    i = int(sys.argv[2])
+    try:
+        i = int(sys.argv[2])
+    except ValueError:
+        sys.exit(f"Record number must be an integer, got {sys.argv[2]!r}")
+    if not -len(records) <= i < len(records):
+        sys.exit(f"No record {i}: {day.name} has {len(records)} "
+                 f"(0-{len(records) - 1}).")
     r = records[i]
     print(f"#{i}  {r['source']} / {r['call']}  at {r['fetched_at']}")
     print(f"args={r['args']}  kwargs={r['kwargs']}\n{'-' * 70}")

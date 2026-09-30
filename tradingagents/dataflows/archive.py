@@ -103,19 +103,28 @@ def record(source: str, call: str, args=(), kwargs=None, payload=None) -> None:
         logger.debug("archive: skipped %s/%s (%s)", source, call, exc)
 
 
-def archived(source: str):
+def archived(source: str, method_arg: bool = False):
     """Decorate a fetcher so its return value is archived point-in-time.
 
     Applied to functions with several return paths (the social fetchers) and to
     the vendor router, so one decorator covers every branch. An exception
     propagates untouched after being recorded, because a failed fetch is itself
     part of what the agents saw.
+
+    ``method_arg`` says the first argument names the call, which is true of
+    ``route_to_vendor(method, ...)`` and false of ``fetch_reddit_posts(ticker,
+    ...)``. Taking the first argument unconditionally recorded a ticker as
+    though it were a tool, so a reader could not tell which source had failed --
+    the one question the archive exists to answer.
     """
 
     def decorator(fn):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
-            call = args[0] if (args and isinstance(args[0], str)) else fn.__name__
+            if method_arg and args and isinstance(args[0], str):
+                call = args[0]
+            else:
+                call = fn.__name__
             try:
                 result = fn(*args, **kwargs)
             except Exception as exc:

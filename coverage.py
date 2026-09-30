@@ -93,7 +93,12 @@ def summarize(ticker: str, since_iso: str) -> dict[str, dict[str, int]]:
                 continue
             if ticker.upper() not in str(rec.get("args", "")).upper():
                 continue
-            call = str(rec.get("call") or rec.get("source") or "?")
+            # Records written before the decorator was fixed name the call
+            # after the ticker; fall back to the source file so an old archive
+            # still groups sensibly instead of inventing per-ticker "tools".
+            call = str(rec.get("call") or "?")
+            if call.upper() == ticker.upper():
+                call = str(rec.get("source") or call)
             state = classify(rec.get("payload"))
             tally.setdefault(call, {"ok": 0, "empty": 0, "unavailable": 0})[state] += 1
     return tally
