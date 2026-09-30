@@ -58,6 +58,12 @@ def _hold_posix(handle) -> Iterator[None]:
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
+# Windows/glibc spell this EDEADLOCK; macOS and the BSDs define only EDEADLK,
+# so naming it directly raises AttributeError there -- on the error path of a
+# branch those platforms never take.
+_EDEADLOCK = getattr(errno, "EDEADLOCK", errno.EDEADLK)
+
+
 @contextmanager
 def _hold_windows(handle) -> Iterator[None]:
     import msvcrt
@@ -70,7 +76,7 @@ def _hold_windows(handle) -> Iterator[None]:
         except OSError as exc:
             # LK_LOCK gives up after about ten seconds of another writer's hold;
             # any other failure is not a wait.
-            if exc.errno != errno.EDEADLOCK:
+            if exc.errno != _EDEADLOCK:
                 raise
     try:
         yield
