@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 from stockstats import wrap
 
 from tradingagents.dataflows.errors import NoMarketDataError, VendorError
-from tradingagents.dataflows.symbols import normalize_symbol
+from tradingagents.dataflows.symbols import crypto_base, normalize_symbol
 from tradingagents.dataflows.vendors.yahoo.common import raise_for_empty, yf_retry
 from tradingagents.dataflows.vendors.yahoo.ohlcv import _assert_ohlcv_not_stale, load_ohlcv
 
@@ -171,7 +171,7 @@ def get_stock_stats_indicators_window(
             if date_str in indicator_data:
                 indicator_value = indicator_data[date_str]
             else:
-                indicator_value = "N/A: Not a trading day (weekend or holiday)"
+                indicator_value = _missing_value_label(symbol, date_str)
 
             date_values.append((date_str, indicator_value))
             current_dt = current_dt - relativedelta(days=1)
@@ -202,6 +202,24 @@ def get_stock_stats_indicators_window(
     )
 
     return result_str
+
+
+def _missing_value_label(symbol: str, date_str: str) -> str:
+    """Say why a date has no value, without asserting a reason we do not know.
+
+    The old wording called every gap a weekend or holiday. Crypto trades every
+    day of the year, so for a crypto pair that claim is always false, and it
+    presented a real data gap to the agents as a market closure they should
+    expect (a missing Tuesday bar for BTC-USD read as a holiday). Only a
+    genuine weekend on a non-24/7 instrument is named as one.
+    """
+    from datetime import date
+
+    if crypto_base(symbol) is None:
+        y, m, d = (int(part) for part in date_str.split("-"))
+        if date(y, m, d).weekday() >= 5:
+            return "N/A: Not a trading day (weekend)"
+    return "N/A: no data for this date (the vendor returned no row)"
 
 
 def _get_stock_stats_bulk(
@@ -293,4 +311,4 @@ def get_stock_stats(
         indicator_value = matching_rows[indicator].values[0]
         return indicator_value
     else:
-        return "N/A: Not a trading day (weekend or holiday)"
+        return _missing_value_label(symbol, as_of_str)

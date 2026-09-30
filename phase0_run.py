@@ -7,8 +7,8 @@ Run:  source .venv/bin/activate && python phase0_run.py
       python phase0_run.py ETH-USD          # single ticker
       python phase0_run.py BTC-USD ETH-USD  # several
 """
-import sys, time, json
-from datetime import datetime
+import os, sys, time, json
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -18,7 +18,14 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
 TICKERS = sys.argv[1:] or ["BTC-USD"]
-TRADE_DATE = datetime.now().strftime("%Y-%m-%d")
+# Yesterday, not today. Today's bar is still forming: on the 2026-09-30 run its
+# Open equalled its High and volume was ~38% below the prior day, yet every
+# indicator was computed over it -- including the macdh = -48.51 crossover that
+# the whole decision turned on. Analysing the last complete bar removes that.
+# Override with PHASE0_DATE=YYYY-MM-DD.
+TRADE_DATE = os.getenv("PHASE0_DATE") or (
+    datetime.now() - timedelta(days=1)
+).strftime("%Y-%m-%d")
 OUT = Path("phase0_reports")
 OUT.mkdir(exist_ok=True)
 
