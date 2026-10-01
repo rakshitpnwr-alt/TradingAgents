@@ -47,6 +47,16 @@ CANDIDATES = {
 # policy rate older than ~45 days spans at least one central-bank meeting.
 STALE_AFTER_DAYS = 45
 
+# What the carry signal actually uses, imported so the two cannot drift apart.
+# A probe that recommends one series while the signal trades another is a probe
+# that quietly misreports the live differential.
+try:
+    from tradingagents.signals.carry import RATE_SERIES as _CARRY
+
+    CARRY_SERIES = {ccy: series for ccy, (series, _tenor) in _CARRY.items()}
+except Exception:  # noqa: BLE001 -- the probe must still run standalone
+    CARRY_SERIES = {}
+
 _TITLE = re.compile(r"^## FRED:\s*(.+?)\s*\(([A-Z0-9]+)\)\s*$", re.M)
 _LATEST = re.compile(r"\*\*Latest:\*\*\s*(-?[\d.]+)\s*\((\d{4}-\d{2}-\d{2})\)")
 
@@ -92,7 +102,17 @@ def main() -> None:
             print(f"{ccy:5s} {series_id:22s} {status:8s} {obs_date:12s} {value:8.3f}  {title[:44]}")
             # Freshest wins, not first listed. Ordering the candidate list by
             # preference silently made publication lag the tie-breaker.
-            if status == "OK" and (ccy not in found or obs_date > found[ccy][2]):
+            #
+            # On a tie, the series the carry signal actually uses wins, so this
+            # probe and the signal can never print different differentials for
+            # the same day. ECBMRRFR and ECBDFR are both current; the signal
+            # takes the deposit facility because that is what euro overnight
+            # rates sit against, and a probe reporting the refi rate instead was
+            # 15bp away from the number the pipeline would trade on.
+            preferred = CARRY_SERIES.get(ccy) == series_id
+            fresher = ccy not in found or obs_date > found[ccy][2]
+            same_day = ccy in found and obs_date == found[ccy][2]
+            if status == "OK" and (fresher or (same_day and preferred)):
                 found[ccy] = (series_id, value, obs_date)
 
     print("\n--- usable, one per currency (first OK wins) ---")
