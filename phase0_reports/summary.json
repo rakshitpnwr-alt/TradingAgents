@@ -1,16 +1,9 @@
 [
   {
-    "ticker": "EURUSD",
-    "asset_type": "forex",
-    "decision": "Sell",
-    "seconds": 208,
-    "report": "phase0_reports/EURUSD/2026-09-30/complete_report.md"
-  },
-  {
-    "ticker": "USDJPY",
-    "asset_type": "forex",
-    "decision": "Overweight",
-    "seconds": 231,
-    "report": "phase0_reports/USDJPY/2026-09-30/complete_report.md"
+    "ticker": "BTC-USD",
+    "asset_type": "crypto",
+    "decision": "Underweight",
+    "seconds": 241,
+    "report": "phase0_reports/BTC-USD/2026-09-30/complete_report.md"
   }
 ]
