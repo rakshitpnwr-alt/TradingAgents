@@ -2,8 +2,15 @@
   {
     "ticker": "EURUSD",
     "asset_type": "forex",
-    "decision": "Underweight",
-    "seconds": 221,
+    "decision": "Sell",
+    "seconds": 208,
     "report": "phase0_reports/EURUSD/2026-09-30/complete_report.md"
+  },
+  {
+    "ticker": "USDJPY",
+    "asset_type": "forex",
+    "decision": "Overweight",
+    "seconds": 231,
+    "report": "phase0_reports/USDJPY/2026-09-30/complete_report.md"
   }
 ]

@@ -1,11 +1,11 @@
 **Action**: Sell
 
-**Reasoning**: Momentum signal is short (trailing 12m -2.5%, vol scalar near cap at 2.03x), and the research plan confirms Underweight/short conviction, moderated for size. Technicals confirm bearish structure (price below all MAs, 10EMA<50SMA<200SMA, MACD negative and widening) but RSI at 22.45 and price riding the lower Bollinger band (1.13035) signal a stretched, oversold tape with elevated mean-reversion risk and a shallow underlying trend. Rather than chasing the low at spot (1.13408), better risk/reward comes from scaling into a bounce toward the 10EMA/50SMA zone (~1.142-1.153), with a stop above the 50 SMA that would invalidate the short thesis if reclaimed.
+**Reasoning**: Both deterministic signals (12m momentum and carry) are short, and the technical tape confirms an unambiguous, still-accelerating downtrend: price below all key MAs in bearish order, MACD negative and widening, RSI oversold but without bullish divergence, and price riding the lower Bollinger band. The dollar-factor decomposition shows this is mostly a broad-dollar move rather than an idiosyncratic euro story, which argues for durability. Research plan calls this Underweight/short but sized below max given stretched RSI, the lower-band pin, and live risk-off/oil tail risk that is carry's known failure mode, plus stale-leg risk in the rate differential. I'm translating that into a Sell (short EURUSD) sized at ~65% of standard, scaled in rather than chased, with a hard invalidation at the levels the technical report flags as the first signs of stabilization.
 
-**Entry Price**: 1.148
+**Entry Price**: 1.14194
 
-**Stop Loss**: 1.154
+**Stop Loss**: 1.15347
 
-**Position Sizing**: Half of a standard short allocation (~2-3% of portfolio risk capital), reflecting conviction-moderated sizing given the shallow 12m trend and oversold extreme; do not add leverage beyond the signal's already-near-capped vol scalar.
+**Position Sizing**: ~65% of a standard short allocation; scale in on a corrective bounce toward 1.14194 (10 EMA) rather than adding into the current oversold extreme near 1.133. Do not press full size while price is pinned to the lower Bollinger band.
 
 FINAL TRANSACTION PROPOSAL: **SELL**
