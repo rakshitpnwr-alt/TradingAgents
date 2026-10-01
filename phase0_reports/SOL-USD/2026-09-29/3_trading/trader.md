@@ -1,11 +1,11 @@
-**Action**: Sell
+**Action**: Hold
 
-**Reasoning**: Research plan calls for Underweight — trim, not exit. Price structure is stretched ~19% above the 50 SMA with MACD histogram contracting for three sessions off new highs and RSI rolling over from overbought (70→63.6), a momentum divergence even though the moving-average stack remains bullishly aligned. Macro headwinds (10Y spiking, sticky CPI) and the "No Alpenrush" catalyst denial remove near-term upside triggers, while the recent rejection near the upper Bollinger band (128.84) after tagging $124.62 reinforces a corrective/consolidation phase rather than continuation. This is a sell-into-strength/reduce action sized moderately (not a full exit) since the long-term trend (200 SMA, golden cross) is still intact and could resume on a reclaim of $124.62/$128.84 plus yield stabilization.
+**Reasoning**: Price ($119.06) sits in a genuine no-man's-land: the long-term stack (10EMA 117.25 > 50SMA 100.34 > 200SMA 85.27) is intact and bullish, but momentum is clearly rolling over (MACD histogram collapsed from 1.18 to 0.41, RSI down from 70 to 63.6, rejection off the upper Bollinger Band near $124.6/$128.8) alongside a rising-rate macro headwind and narrow ETF flow concentration. Neither the bull nor bear case dominates at current levels, and the plan explicitly calls for waiting for the tape to resolve into either a breakout confirmation or a shelf-hold before committing new capital. Given elevated ATR (~4.90) and the unresolved decision zone, adding here risks chasing a stretched, decelerating trend, while exiting would fight an intact multi-month uptrend — so maintaining existing exposure without new entries is the correct risk-adjusted action.
 
-**Entry Price**: 119.06
+**Entry Price**: 128.84
 
-**Stop Loss**: 125.5
+**Stop Loss**: 111.0
 
-**Position Sizing**: Trim existing SOL-USD exposure by roughly one-third to one-half into current strength; do not add fresh longs. Scale further trims if price closes below the 10 EMA (~117.25) and Bollinger mid-band (~110.46), with the 50 SMA (~100.34) as the level that would invalidate the primary uptrend thesis and warrant cutting to minimum exposure.
+**Position Sizing**: Maintain existing position at standard/neutral allocation; no new capital at $119. On a confirmed daily close above $128.84 with rising MACD histogram, add in ~25% increments of a standard position toward Overweight. On stabilization/bounce at the $117 EMA or $111-112 shelf, add a partial tranche only after confirmation. A decisive daily close below $111 should trigger trimming toward Underweight.
 
-FINAL TRANSACTION PROPOSAL: **SELL**
+FINAL TRANSACTION PROPOSAL: **HOLD**

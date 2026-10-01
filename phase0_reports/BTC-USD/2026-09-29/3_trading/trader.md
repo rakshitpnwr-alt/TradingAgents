@@ -1,11 +1,11 @@
-**Action**: Buy
+**Action**: Sell
 
-**Reasoning**: Primary trend remains firmly bullish: price above the 10 EMA, 50 SMA and 200 SMA, golden cross intact, and VWMA confirms the rally is volume-backed rather than a thin drift. The research plan's Overweight call is well-supported by this "present-tense" structural evidence, but the MACD bearish divergence and RSI's sharp cooling from 73.9 to 60.9 warrant scaling in on weakness rather than chasing the current price near $83,500. Buying into the pullback toward the VWMA/10-EMA confluence (~$82,000-$83,300) and the 20-day Bollinger mid-band (~$80,700) aligns entries with the plan's stated support zones, while keeping the invalidation level at the 50 SMA where the bull thesis breaks down.
+**Reasoning**: Research plan calls for Underweight (trim to 50-60% of normal size), and while the multi-timeframe MA structure remains bullish, forward-looking momentum (RSI cooling from 72 to 61, MACD histogram shrinking 5 sessions straight) is decelerating right into a macro headwind (rising 10Y/30Y yields) with an air pocket below the 82,227 VWMA/83,295 EMA down to the 76,478 50 SMA. Selling into current strength near the VWMA/EMA cluster rather than waiting for a breakdown captures distribution at better prices, consistent with the plan's directive to trim into 83,000-84,000 rather than chase weakness. Core position is retained since the long-term uptrend is technically intact and there's no BTC-specific bad news, so this is a partial reduction, not a full exit.
 
-**Entry Price**: 82200.0
+**Entry Price**: 83500.0
 
-**Stop Loss**: 76400.0
+**Stop Loss**: 75800.0
 
-**Position Sizing**: Add incrementally to bring total BTC-USD exposure to ~110-120% of a standard/baseline allocation: roughly half the intended add near $82,000-$83,300 (10 EMA/VWMA zone) and the remainder on a deeper dip toward $80,700 (Bollinger mid-band) or the $76,500-$78,000 miner-cost/50 SMA zone. Downgrade toward neutral/underweight if MACD confirms a bearish crossover with RSI below 50 and ETF flows turn negative, even before the stop is hit.
+**Position Sizing**: Trim existing BTC-USD exposure down to roughly 50-60% of a normal/full position; sell the tranche being reduced into the 82,200-83,500 zone (VWMA/10 EMA cluster). Keep the retained core protected by the stop below the 50 SMA structure, and do not add new exposure until RSI/MACD stabilize or yields cool.
 
-FINAL TRANSACTION PROPOSAL: **BUY**
+FINAL TRANSACTION PROPOSAL: **SELL**

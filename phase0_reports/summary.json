@@ -1,20 +1,20 @@
 [
   {
     "ticker": "BTC-USD",
-    "decision": "Overweight",
-    "seconds": 270,
+    "decision": "Underweight",
+    "seconds": 219,
     "report": "phase0_reports/BTC-USD/2026-09-29/complete_report.md"
   },
   {
     "ticker": "ETH-USD",
     "decision": "Hold",
-    "seconds": 233,
+    "seconds": 204,
     "report": "phase0_reports/ETH-USD/2026-09-29/complete_report.md"
   },
   {
     "ticker": "SOL-USD",
-    "decision": "Underweight",
-    "seconds": 214,
+    "decision": "Hold",
+    "seconds": 222,
     "report": "phase0_reports/SOL-USD/2026-09-29/complete_report.md"
   }
 ]

@@ -1,11 +1,11 @@
 **Action**: Hold
 
-**Reasoning**: Trend structure (10EMA>50SMA>200SMA, all rising) stays bullish long-term, but momentum has clearly rolled over: fresh MACD bearish crossover, RSI down from 72 to 63 against flat price, ATR contracting, and five sessions stuck below the $2,806 swing high. With price only ~$100 above the $2,587 mid-band/$2,666 10EMA decision line and a hostile rate backdrop (10Y >5.2%), the near-term risk is skewed to a mean-reversion pullback even though the primary trend is intact. No edge to add exposure into this zone, and no confirmed breakdown yet to justify cutting core exposure — maintain current position and manage risk at the defined trigger levels rather than force a directional bet.
+**Reasoning**: The MA stack (price > 10 EMA 2665.80 > 50 SMA 2403.57 > 200 SMA 2103.89) confirms an intact intermediate/long-term uptrend, so this isn't a Sell. But MACD histogram just flipped negative and RSI has decelerated from 72.18 to 63.11, signaling momentum is rolling over into a rising-rate macro backdrop after a +71% quarter — a poor risk/reward for adding, so it isn't a Buy either. Maintain existing exposure at neutral weight: no fresh buying into cooling momentum near 2677-2689, but no capitulation while the 50 SMA and lower Bollinger band remain unbroken. Use the defined structural levels (50 SMA ~2404, lower band ~2345, prior high ~2776) as the triggers for the next directional move rather than acting on the current ambiguous signal.
 
-**Entry Price**: 2450.0
+**Entry Price**: not provided
 
 **Stop Loss**: 2345.0
 
-**Position Sizing**: Maintain existing position at standard allocation; do not add here. Reserve dry powder to buy a confirmed mean-reversion move into the $2,400-$2,450 zone (near 50 SMA) with a stop near $2,345 (lower Bollinger band), sizing any new add at roughly 25-35% of a full unit. If price closes below $2,587 mid-band with MACD still negative, trim 25-35% of existing holdings; a sustained break below $2,404 warrants a larger reduction.
+**Position Sizing**: Maintain current position at standard/neutral portfolio weight; do not add on strength. If underweight, wait for confirmation rather than chasing. Plan to trim 25-40% on a confirmed MACD/signal bearish crossover combined with a break below the 50 SMA (~2404), and scale out 15-20% into a rally toward ~2776 if momentum fails to re-confirm.
 
 FINAL TRANSACTION PROPOSAL: **HOLD**
