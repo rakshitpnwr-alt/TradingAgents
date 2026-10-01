@@ -1,54 +1,56 @@
 # EUR/USD Weekly Macro & News Report — as of 2026-09-30
 
-## Big Picture
-EUR/USD has been on the back foot through most of September, trading "not far off its lowest levels of the year" per Reuters, before stabilizing somewhat in the final sessions of the month on a softer-than-expected US inflation print. The dollar's resilience appears to be the dominant driver, but there is a genuine two-sided story worth separating: USD strength from a global bond sell-off/higher-for-longer Fed repricing on one side, and EUR softness from an energy-price and political-risk shock on the other.
+## 1. Price Action & Positioning
+EUR/USD has been grinding toward its 2026 lows, trading "not far off its lowest levels of the year against the dollar" per Reuters (Sept 29). The pair has been a function of broad USD strength rather than EUR-specific weakness this week — multiple FX Empire/WSJ dispatches show EUR/USD and GBP/USD moving in lockstep lower against a firming dollar, confirming this is largely a **dollar (quote-currency) story**, not an idiosyncratic euro story — though euro-side energy and political risks are compounding the move (see below).
 
-## Dollar Leg (USD strength drivers)
-- **Yields spiking hard**: The 10Y UST yield has surged from 4.63% (Aug 4) to 5.26% (Sep 29) — an 63bp move in under two months, with an acceleration in the last two weeks (4.96% on Sep 22 → 5.26% on Sep 29). This is a classic "higher-for-longer" repricing, confirmed by headlines citing "bond sell-off," "rising yields," and "hawkish Fed expectations" lifting DXY repeatedly through the week.
-- **Broad USD index (DTWEXBGS)** rose from ~117.9 (Sep 8-9 trough) to 120.33-120.55 by Sep 24-25, a ~2.2% rally in three weeks — meaningful trend strength.
-- **Fed funds rate** sits at 3.63% (Aug 2026), down significantly from 4.22% a year ago — the Fed has been cutting through late 2025/early 2026 and has been on hold since ~May 2026. The current bond sell-off reflects markets pushing out/paring expectations for further cuts, not a hiking cycle resuming.
-- **Inflation**: US CPI index rose from 324.2 (Sep 2025) to 334.1 (Aug 2026), a ~3.05% y/y pace — still above target, feeding "higher-for-longer" Fed narrative, though the Sep 30 news notes a "smaller-than-expected" September inflation read that briefly flattened the dollar.
-- **Labor market**: Unemployment at 4.1% (Aug 2026), down from 4.4% a year ago — a gradually healing labor market, not a cause for near-term Fed easing urgency.
-- **Yield curve (10Y-2Y)**: compressed from 0.53 (mid-Aug) to as low as 0.20 (Sep 21) before re-steepening to 0.41 by Sep 30 — a volatile curve reflecting shifting rate-cut/hike expectations, now re-steepening alongside the long-end yield spike (bear-steepening, consistent with inflation/term-premium repricing rather than growth optimism).
-- **Geopolitical/energy catalyst**: US-Iran standoff pushing Brent toward $107/bbl has been repeatedly cited as lifting both oil-driven inflation expectations and the dollar (safe-haven/risk-off bid), with VIX ticking up from ~14.9 (Aug 31) to ~16 (Sep 29).
+The WSJ Dollar Index fell 0.50% over Q3 (first quarterly decline in four quarters, to ~97.04), but has been *rising* intraday into month-end as a bond sell-off and Iran-driven oil spike reversed the broader dollar-softening trend. The broad USD trade-weighted index (DTWEXBGS) bottomed near 117.9 (Sept 8) and has since rallied to 120.3-120.6 (Sept 24-25), a ~2% rebound in three weeks — this is the dominant driver pressuring EUR/USD lower into quarter-end.
 
-## Euro Leg (EUR weakness drivers)
-- **ECB has been hiking, not cutting**: ECB main refi rate rose from 2.40% to 2.65% on Sep 16, 2026 — a hawkish move. This should normally support the euro via rate differentials, yet EUR has still weakened — suggesting the USD/yield/risk-off leg is dominating, or markets see this as a "one-and-done" reactive hike against energy-driven inflation rather than a durable tightening cycle.
-- **France inflation shock**: French September CPI jumped to 3.4% y/y from 2.6% in August — the fastest pace in two years, driven by surging oil and gas costs. This keeps pressure on the ECB to continue tightening even as growth in the bloc looks fragile, a stagflationary setup that is typically euro-negative on net (growth risk outweighing hawkish rate response).
-- **Energy vulnerability**: Reuters' analysis piece explicitly frames the euro's fate as hostage to "global energy price, political risk tests" — the eurozone's large energy import bill makes it structurally exposed to the Iran-driven Brent rally, which is a terms-of-trade shock working against EUR independent of relative rates.
-- **UK relative outperformance**: Stronger UK GDP data has lifted GBP against a softer dollar even as EUR lagged, suggesting idiosyncratic eurozone weakness (energy, French inflation/political risk) rather than pure broad-dollar strength — a sign the euro leg is not just "along for the ride."
+## 2. Rates: The Core Driver
+This is the most important development of the week: **US yields have surged sharply**, re-steepening the curve and lifting the dollar via the rate-differential channel.
+- 2Y UST: 4.14% (Jul 2) → **4.89%** (Sept 29), +75bp over the quarter, with a sharp acceleration from ~4.6% to ~4.9% in just the last two weeks of September.
+- 10Y UST: 4.49% → **5.26%**, +77bp, now at its highest in years. The 30Y UST hit its highest level since 2002 per global news flow.
+- 10Y-2Y spread: widened modestly to 0.41%, indicating the long end is leading the sell-off (term-premium/inflation-risk driven, not just near-term Fed repricing).
+- Fed funds effective rate has been flat at 3.63% since May — the Fed is on hold, but the bond-market sell-off reflects **higher-for-longer** repricing and possibly rising inflation-risk/term premium (oil shock) rather than fresh hikes.
+- US CPI index rose from 324.2 (Sep-25) to 334.1 (Aug-26), ~3.05% y/y — a cooler-than-expected September CPI print (per Reuters/Yahoo "softer-than-expected inflation") briefly flattened the dollar, but this was overwhelmed by the broader yield/oil-driven rally.
+- Unemployment has fallen to 4.1% (from 4.4% a year ago) — resilient labor market reinforcing a "no urgency to cut" Fed narrative.
 
-## Rate Differential Snapshot
-- Fed funds: 3.63% (cutting cycle, now paused)
-- ECB refi: 2.65% (just hiked from 2.40%)
-- Nominal differential still favors USD carry, but the gap has been narrowing via ECB hikes even as US long yields have exploded higher — the EUR/USD move looks increasingly driven by the long-end UST term-premium/risk-off dynamic (10Y UST +63bp) rather than the short-rate differential, which has actually moved against the dollar at the margin.
+**Net read**: Higher US real/nominal yields, not a hawkish Fed repricing per se, are driving dollar strength. Rising term premium (oil, deficits, supply) is doing as much work as policy expectations — this matters because it is a less durable, more reversible driver than a genuine Fed hiking cycle.
 
-## Risk Sentiment & Equities
-- US equities (Dow, S&P 500) posted September losses as Treasury yields climbed — classic risk-off/rate-shock environment.
-- VIX up modestly (~15 → ~16), 30Y UST at highest since 2002, mortgage rates at 7.58% — broad tightening of US financial conditions.
-- This backdrop (rising US real/nominal yields, softening equities, modestly firmer vol) is consistent with safe-haven/dollar-supportive flows independent of eurozone-specific news.
+## 3. Euro-side Drivers
+- **French inflation shock**: September French CPI jumped to 3.4% y/y from 2.6% — the fastest pace in over two years, driven by energy (oil/gas) costs. This keeps pressure on the ECB to maintain/raise rates, a mild euro-supportive offset, but the market reaction has so far been dominated by the dollar side.
+- **Energy price risk**: Reuters' "Euro's dollar resilience faces energy price, political risk tests" — Brent crude pushing toward $107/bbl amid the stalled US-Iran standoff is a direct negative terms-of-trade shock for the euro area (energy importer), a classic euro-negative channel distinct from dollar strength.
+- **UK/political spillover**: UK GDP beat and PM Burnham's EU-rejoin comments are sterling-specific but indicate broader European political noise; not a direct EUR driver but color for European risk sentiment.
 
-## Prediction Markets
-Live Polymarket odds for Fed rate cuts, ECB decisions, and recession probabilities were unavailable (vendor withholds data for the current date to avoid leaking post-decision information). No quantifiable market-implied probabilities to report this cycle — rely on rates/news signals above.
+## 4. Risk Sentiment
+- VIX rose from 14.9 (Aug 31) to ~16-17 through mid/late September, spiking to 17.84 (Sept 10) and 17.71 (Sept 16) before settling near 16. This is a modest but genuine pickup in equity vol, coincident with the bond sell-off and the Iran/oil tension — a mild risk-off backdrop that typically supports the dollar as a funding/safe-haven currency against the euro.
+- US equities (Dow, S&P) posted September monthly losses as Treasury yields climbed — confirms the cross-asset narrative: rising yields pressuring both stocks and (via carry/safety) supporting USD.
 
-## Key Takeaways for Traders
-1. **Driver attribution**: The dominant force this week is the US long-end yield spike (bond sell-off) and oil-driven risk-off, not a reversal of Fed easing expectations alone (Fed funds unchanged at 3.63% since May). Watch the 10Y UST and oil (Brent/Iran headlines) as the marginal EUR/USD drivers.
-2. **ECB hike didn't rescue EUR**: Despite tightening to 2.65%, EUR stayed pressured — a sign markets view the hike as reactive/defensive against imported energy inflation (stagflationary), not confidence-inspiring.
-3. **What would separate the legs**: A reversal in Brent/oil and 10Y UST yields without EUR follow-through would confirm USD-specific strength (term premium); EUR rallying on its own against a stable dollar (e.g., versus JPY or GBP) would confirm euro-specific relief (energy/political risk easing).
-4. **Near-term catalysts**: US PCE and payrolls data (just past/pending), further Iran/oil headlines, and any follow-through eurozone inflation prints (after France's hot 3.4% reading) are the key swing factors into October.
-5. **Technical/flow backdrop**: Multiple FX-desk commentaries (FX Empire) describe EUR/USD as oversold and testing key support — a snapback on any dovish US data surprise (as seen Sep 30 on the soft inflation read) is plausible, but the structural higher-yield/oil backdrop argues against a sustained reversal without a genuine de-escalation in Iran tensions or a clear dovish Fed pivot.
+## 5. Prediction Markets
+Live Polymarket odds for Fed rate cut probability, ECB decisions, and 2026 recession were unavailable (withheld for the current date per vendor policy on live/unresolved markets). No forward-looking probability data could be sourced this cycle — traders should source these directly from Polymarket/CME FedWatch for real-time positioning context.
 
-| Factor | Reading | Direction for EUR/USD | Driver |
-|---|---|---|---|
-| 10Y UST yield | 4.63% (Aug 4) → 5.26% (Sep 29) | USD bullish | Bond sell-off / higher-for-longer repricing |
-| Broad USD index (DTWEXBGS) | 117.9 (Sep 8) → 120.3-120.6 (Sep 24-25) | USD bullish | Broad dollar strength |
-| Fed funds rate | 3.63%, flat since May 2026 | Neutral | Cutting cycle paused, not reversing |
-| US CPI | ~3.05% y/y (Aug); Sept print "softer than expected" | Mixed, recently USD-bearish at margin | Inflation still elevated but surprise index easing |
-| US unemployment | 4.1% (Aug), down from 4.4% YoY | Mild USD bullish | Resilient labor market |
-| ECB refi rate | 2.40% → 2.65% (Sep 16 hike) | EUR bullish (rate diff) but offset | Reactive hike vs. energy inflation |
-| France CPI | 2.6% → 3.4% y/y (Sep) | EUR bearish (stagflation risk) | Oil/gas cost surge |
-| Brent crude | Approaching $107/bbl | EUR bearish / USD mixed | US-Iran standoff |
-| VIX | 14.9 (Aug 31) → 16.0 (Sep 29) | Modest USD/safe-haven bullish | Rising risk-off tone |
-| 10Y-2Y curve | 0.53 (mid-Aug) → 0.20 (Sep 21) → 0.41 (Sep 30) | Re-steepening (bear-steepener) | Term premium/inflation repricing |
-| US equities | Dow/S&P posted Sept losses | Risk-off, USD supportive | Yield-driven de-rating |
-| Prediction markets (Fed, ECB, recession) | Data withheld | N/A | Vendor restriction on current-date odds |
+## 6. Trading Implications
+- **Direction of driver**: The EUR/USD decline this week is predominantly a **USD strength (base-quote: quote-strength)** story, powered by a sharp UST yield spike (term premium/oil-driven) rather than EUR-specific collapse — though Eurozone energy-import vulnerability to the Iran/oil shock is a secondary, genuine euro-negative.
+- **How to differentiate**: Watch whether EUR weakens against other crosses (e.g., EUR/GBP, EUR/JPY) — if EUR is falling broadly (not just vs. USD), that confirms a euro-specific (energy terms-of-trade) component; if EUR is flat/firm vs. other majors while only falling vs. USD, it confirms a pure dollar/UST-yield story.
+- **Key risk catalysts**: (1) US-Iran standoff/oil prices — further escalation is euro-negative (terms of trade) and could also prove dollar-positive via inflation/safe-haven channels, a double-negative for EUR/USD; (2) US inflation and jobs data (PCE, NFP) — a confirmation of cooling inflation could cap yields and give EUR/USD a relief bounce; (3) ECB commentary given accelerating French inflation — any hawkish ECB signal would be a genuine euro-positive offset.
+- **Levels/bias**: EUR/USD is technically oversold per FX Empire commentary and testing key support; absent a reversal in the UST yield spike or oil prices, the path of least resistance remains lower, but the oversold technical condition raises relief-rally risk on any dovish US data surprise.
+
+---
+
+## Summary Table
+
+| Factor | Reading | Direction for EUR/USD |
+|---|---|---|
+| Broad USD Index (DTWEXBGS) | 117.9 (Sep 8) → 120.3 (Sep 25), +2% | Bearish (USD strength) |
+| US 2Y Treasury yield | 4.14% → 4.89% (+75bp since Jul) | Bearish (rate differential widening vs. EUR) |
+| US 10Y Treasury yield | 4.49% → 5.26% (+77bp), 30Y highest since 2002 | Bearish (term premium surge) |
+| Fed Funds Rate | Flat at 3.63% since May | Neutral (Fed on hold, no fresh hikes) |
+| US CPI (y/y, latest) | ~3.05%, softer-than-expected print | Mild dollar-dampening (briefly) |
+| US Unemployment | 4.1%, down from 4.4% y/y | Bearish (resilient labor, no cut urgency) |
+| Yield curve (10Y-2Y) | 0.41%, re-steepening | Confirms long-end-led yield surge |
+| VIX | 14.9 → ~16-17, mild risk-off | Bearish (USD safe-haven bid) |
+| French CPI | 2.6% → 3.4% y/y (2-yr high) | Mild bullish (keeps ECB hawkish pressure) |
+| Oil/Brent | Approaching $107 amid US-Iran standoff | Bearish (euro-area terms of trade hit) |
+| Prediction markets (Fed/ECB/recession) | Data withheld (live-odds policy) | No data available this cycle |
+| Price action | EUR/USD near 2026 lows, technically oversold | Bearish trend, relief-bounce risk |
+
+**Overall bias**: Near-term bearish EUR/USD, driven chiefly by a dollar-side US yield/term-premium surge plus an oil-shock terms-of-trade hit to the euro; watch oil/Iran headlines, US PCE/payrolls, and any ECB hawkish response to French inflation for reversal catalysts.

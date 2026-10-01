@@ -3,7 +3,7 @@
     "ticker": "EURUSD",
     "asset_type": "forex",
     "decision": "Underweight",
-    "seconds": 225,
+    "seconds": 221,
     "report": "phase0_reports/EURUSD/2026-09-30/complete_report.md"
   }
 ]

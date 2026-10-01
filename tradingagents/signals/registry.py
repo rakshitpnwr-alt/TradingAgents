@@ -13,12 +13,13 @@ number every time it is asked is the anchor.
 
 from __future__ import annotations
 
-from tradingagents.signals import dollar_factor, tsmom
+from tradingagents.signals import carry, dollar_factor, tsmom
 from tradingagents.signals.base import Direction, Signal, SignalResult, run_signal
 
 # Every signal that has cleared the screen. Order is report order.
 REGISTRY: tuple[Signal, ...] = (
     tsmom.SIGNAL,
+    carry.SIGNAL,
     dollar_factor.SIGNAL,
 )
 

@@ -16,7 +16,7 @@ Reading it:
   NO DATA   the ID is wrong or discontinued, whatever the docs imply
 """
 import re
-from datetime import date, timedelta
+from datetime import date
 
 from dotenv import load_dotenv
 
@@ -41,7 +41,11 @@ CANDIDATES = {
     "NZD": ["IR3TIB01NZM156N", "IRSTCI01NZM156N"],
 }
 
-STALE_AFTER_DAYS = 120   # a quarterly-lagged series cannot price today's carry
+# 120 days was far too loose and picked the wrong series: FEDFUNDS (monthly,
+# 61 days old, 3.630) beat DFF (daily, 2 days old, 3.880) purely because it
+# was listed first, putting 40bp of error into the EURUSD differential. A
+# policy rate older than ~45 days spans at least one central-bank meeting.
+STALE_AFTER_DAYS = 45
 
 _TITLE = re.compile(r"^## FRED:\s*(.+?)\s*\(([A-Z0-9]+)\)\s*$", re.M)
 _LATEST = re.compile(r"\*\*Latest:\*\*\s*(-?[\d.]+)\s*\((\d{4}-\d{2}-\d{2})\)")
@@ -86,7 +90,9 @@ def main() -> None:
             age = (today - date.fromisoformat(obs_date)).days
             status = "STALE" if age > STALE_AFTER_DAYS else "OK"
             print(f"{ccy:5s} {series_id:22s} {status:8s} {obs_date:12s} {value:8.3f}  {title[:44]}")
-            if status == "OK" and ccy not in found:
+            # Freshest wins, not first listed. Ordering the candidate list by
+            # preference silently made publication lag the tie-breaker.
+            if status == "OK" and (ccy not in found or obs_date > found[ccy][2]):
                 found[ccy] = (series_id, value, obs_date)
 
     print("\n--- usable, one per currency (first OK wins) ---")

@@ -369,7 +369,8 @@ def test_a_missing_signal_block_is_not_presented_as_a_clean_slate():
 def test_each_decision_agent_both_reads_and_renders_the_signal(module_path):
     """Binding the variable but never interpolating it is a silent no-op: the
     signal would be computed every run and seen by nobody."""
-    source = open(module_path).read()
+    with open(module_path) as handle:
+        source = handle.read()
     assert "get_signal_block_from_state(state)" in source, "never read"
     assert "{signal_block}" in source, "read but never rendered into the prompt"
     assert "conviction and size, not direction" in source, "hierarchy not stated"
@@ -382,3 +383,171 @@ def test_the_run_state_carries_a_signal_block_field():
         "EURUSD=X", "2026-09-30", signal_block="## Research signals\n\nLONG"
     )
     assert state["signal_block"].endswith("LONG")
+
+
+# ---------------------------------------------------------------------------
+# Carry (Lustig, Roussanov and Verdelhan 2011 and the forward-premium literature)
+# ---------------------------------------------------------------------------
+
+from tradingagents.signals import carry  # noqa: E402
+
+
+@pytest.mark.parametrize("ticker,legs", [
+    ("EURUSD=X", ("EUR", "USD")), ("EURUSD", ("EUR", "USD")),
+    ("usdjpy", ("USD", "JPY")), ("EUR/USD", ("EUR", "USD")),
+])
+def test_carry_reads_the_pair_legs(ticker, legs):
+    assert carry.legs_of(ticker) == legs
+
+
+@pytest.mark.parametrize("junk", ["GC=F", "", None, "ABCDEFG", "EUR", "BTC-USD", 123])
+def test_carry_refuses_anything_that_is_not_a_pair(junk):
+    assert carry.legs_of(junk) is None
+
+
+@pytest.mark.parametrize("base,quote,base_rate,quote_rate,expected", [
+    # Real numbers from the FRED probe, 2026-10-01.
+    ("EUR", "USD", 2.500, 3.880, Direction.SHORT),   # euro pays less: short EURUSD
+    ("USD", "JPY", 3.880, 0.977, Direction.LONG),    # dollar pays more: long USDJPY
+    ("USD", "CAD", 3.880, 2.250, Direction.LONG),
+    # Inside the threshold: a differential this thin is eaten by the cost of
+    # holding the position, so it is no edge rather than a weak direction.
+    ("AUD", "USD", 4.350, 3.880, Direction.FLAT),    # +0.47%
+    ("GBP", "USD", 3.732, 3.880, Direction.FLAT),    # -0.15%
+])
+def test_carry_direction(base, quote, base_rate, quote_rate, expected):
+    direction, _ = carry.decide(base, quote, base_rate, quote_rate)
+    assert direction is expected
+
+
+def test_long_the_base_means_the_base_pays_more():
+    """Getting this backwards would systematically trade the wrong way on every
+    pair, while still producing a confident-looking number."""
+    direction, differential = carry.decide("USD", "JPY", 3.880, 0.977)
+    assert differential > 0 and direction is Direction.LONG
+    direction, differential = carry.decide("JPY", "USD", 0.977, 3.880)
+    assert differential < 0 and direction is Direction.SHORT
+
+
+def test_the_threshold_is_symmetric():
+    just_under = carry.MIN_DIFFERENTIAL_PCT - 0.01
+    just_over = carry.MIN_DIFFERENTIAL_PCT + 0.01
+    assert carry.decide("A", "B", just_under, 0.0)[0] is Direction.FLAT
+    assert carry.decide("A", "B", -just_under, 0.0)[0] is Direction.FLAT
+    assert carry.decide("A", "B", just_over, 0.0)[0] is Direction.LONG
+    assert carry.decide("A", "B", -just_over, 0.0)[0] is Direction.SHORT
+
+
+def test_carry_parses_a_real_fred_report():
+    assert carry.parse_latest("**Latest:** -0.045 (2026-08-01) | **Change**") == (-0.045, "2026-08-01")
+    assert carry.parse_latest("**Latest:** 3.880 (2026-09-29) |") == (3.880, "2026-09-29")
+    assert carry.parse_latest("'XYZ' is not a known macro alias") is None
+    assert carry.parse_latest("") is None and carry.parse_latest(None) is None
+
+
+def test_every_rate_series_declares_its_tenor():
+    """The legs are not all the same instrument. CHF and NZD have only a 3-month
+    rate where the others are overnight, and a spread between different tenors
+    is partly a term premium rather than a policy difference."""
+    for ccy, (series_id, tenor) in carry.RATE_SERIES.items():
+        assert series_id and tenor in {"overnight", "3-month"}, ccy
+    assert carry.RATE_SERIES["CHF"][1] == "3-month"
+    assert carry.RATE_SERIES["USD"][1] == "overnight"
+
+
+def test_carry_uses_the_deposit_facility_for_the_euro():
+    """Both ECB series serve. The deposit facility is the one euro overnight
+    rates actually sit against, so it is comparable to DFF and SONIA; the main
+    refi rate is not."""
+    assert carry.RATE_SERIES["EUR"][0] == "ECBDFR"
+    assert carry.RATE_SERIES["USD"][0] == "DFF"      # daily, not the monthly FEDFUNDS
+    assert carry.RATE_SERIES["GBP"][0] == "IUDSOIA"
+
+
+def test_carry_refuses_a_currency_with_no_verified_series(monkeypatch):
+    """A differential built on a guessed series would look like the paper's
+    result while measuring something else."""
+    result = carry.compute("SEKUSD=X", "2026-09-30")
+    assert result.direction is Direction.UNAVAILABLE
+    assert "SEK" in result.unavailable_reason
+
+
+def _fake_fred(values):
+    """values: {currency: (rate, obs_date)}"""
+    def fetch(currency, as_of_date):
+        if currency not in values:
+            return None
+        rate, obs = values[currency]
+        return rate, obs, carry.RATE_SERIES[currency][0]
+    return fetch
+
+
+def test_carry_flags_a_stale_leg(monkeypatch):
+    """A policy rate is persistent, so an old value is usually still right --
+    but it is wrong exactly when a central bank has just moved, which is when
+    the differential matters most."""
+    monkeypatch.setattr(carry, "_fetch_rate", _fake_fred({
+        "USD": (3.880, "2026-09-29"),
+        "JPY": (0.977, "2026-08-01"),   # 60 days behind
+    }))
+    result = carry.compute("USDJPY=X", "2026-09-30")
+    assert result.direction is Direction.LONG
+    assert any("JPY" in c and "days before" in c for c in result.caveats)
+
+
+def test_carry_does_not_flag_fresh_legs(monkeypatch):
+    monkeypatch.setattr(carry, "_fetch_rate", _fake_fred({
+        "EUR": (2.500, "2026-09-30"), "USD": (3.880, "2026-09-29"),
+    }))
+    result = carry.compute("EURUSD=X", "2026-09-30")
+    assert result.direction is Direction.SHORT
+    assert result.detail["differential_pct"] == pytest.approx(-1.38)
+    assert not any("days before" in c for c in result.caveats)
+
+
+def test_carry_flags_a_tenor_mismatch(monkeypatch):
+    monkeypatch.setattr(carry, "_fetch_rate", _fake_fred({
+        "USD": (3.880, "2026-09-29"), "CHF": (-0.045, "2026-09-29"),
+    }))
+    result = carry.compute("USDCHF=X", "2026-09-30")
+    assert any("different tenors" in c for c in result.caveats)
+
+
+def test_carry_reports_a_missing_rate_rather_than_assuming_zero(monkeypatch):
+    """A missing leg read as zero would invent an enormous differential."""
+    monkeypatch.setattr(carry, "_fetch_rate", _fake_fred({"EUR": (2.5, "2026-09-30")}))
+    result = carry.compute("EURUSD=X", "2026-09-30")
+    assert result.direction is Direction.UNAVAILABLE
+    assert "USD" in result.unavailable_reason
+
+
+def test_carry_records_the_crash_risk_that_is_the_whole_point(monkeypatch):
+    """LRV's central finding is that the premium is payment for crash risk. A
+    carry entry that did not say so would present insurance income as free
+    money."""
+    fails = " ".join(carry.SIGNAL.fails_when).lower()
+    assert "risk-off" in fails or "global risk" in fails
+    assert "depreciate" in fails
+    deviations = " ".join(carry.SIGNAL.deviations).lower()
+    assert "forward discount" in deviations      # we use policy rates instead
+    assert "two months behind" in deviations     # the staleness limit
+
+
+def test_carry_is_registered_for_forex_only():
+    from tradingagents.signals.registry import signals_for
+    assert carry.SIGNAL in signals_for("forex")
+    assert carry.SIGNAL not in signals_for("commodity")
+    assert carry.SIGNAL not in signals_for("crypto")
+
+
+def test_momentum_and_carry_agreeing_carries_through():
+    """For EURUSD on 2026-09-30 both said short, which is the configuration that
+    should produce a confident signal rather than a hedged one."""
+    results = [
+        SignalResult("time_series_momentum", Direction.SHORT, value=-0.025),
+        SignalResult("carry_rate_differential", Direction.SHORT, value=-1.38),
+        SignalResult("dollar_factor_decomposition", Direction.DIAGNOSTIC, value=0.0008),
+    ]
+    direction, why = consensus_direction(results)
+    assert direction is Direction.SHORT
+    assert "dollar_factor" not in why      # the diagnostic did not vote
