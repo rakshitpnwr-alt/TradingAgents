@@ -14,6 +14,7 @@ from tradingagents.agents.context import (
     get_instrument_context_from_state,
     get_language_instruction,
     get_portfolio_context_from_state,
+    get_signal_block_from_state,
 )
 from tradingagents.agents.rating import parse_rating
 from tradingagents.agents.schemas import PortfolioDecision, render_pm_decision
@@ -25,6 +26,7 @@ def create_portfolio_manager(llm):
 
     def portfolio_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
+        signal_block = get_signal_block_from_state(state)
         portfolio_context = get_portfolio_context_from_state(state)
 
         history = state["risk_debate_state"]["history"]
@@ -42,6 +44,8 @@ def create_portfolio_manager(llm):
         prompt = f"""As the Portfolio Manager, synthesize the risk analysts' debate and deliver the final trading decision.
 
 {instrument_context}
+
+{signal_block}\n\nThe research signal above has already chosen the side. Your job is conviction and size, not direction. If you believe the signal is wrong, say so explicitly and give the evidence -- never trade against it silently, and never restate its direction as though you derived it.
 
 {portfolio_context}
 

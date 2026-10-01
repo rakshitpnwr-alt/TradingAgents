@@ -319,8 +319,25 @@ class TradingAgentsGraph:
                 company_name, as_of=self._memory_as_of(trade_date)
             ),
             instrument_context=self.resolve_instrument_context(company_name, asset_type, trade_date),
+            signal_block=self.resolve_signal_block(company_name, trade_date, asset_type),
             portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
         )
+
+    def resolve_signal_block(self, ticker: str, trade_date: str, asset_type: str) -> str:
+        """Deterministic research signals for this run, computed before any agent.
+
+        Best-effort: the signal layer already converts a failing signal into an
+        explicit "unavailable" with a reason, so the only thing left to guard is
+        the registry itself being unreachable. A run without signals is weaker,
+        but it still runs.
+        """
+        try:
+            from tradingagents.signals.registry import build_signal_block
+
+            return build_signal_block(ticker, trade_date, asset_type)
+        except Exception as exc:  # noqa: BLE001 -- never block analysis
+            logger.warning("Signal block unavailable for %s: %s", ticker, exc)
+            return ""
 
     def settle_pending(self, company_name):
         """Settle this ticker's decisions whose holding window has now traded.

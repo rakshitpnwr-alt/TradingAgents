@@ -375,6 +375,26 @@ def report_or_absent(text: str, source: str) -> str:
     return f"(No {source} report in this run: it is not available, not an empty finding.)"
 
 
+def get_signal_block_from_state(state: Mapping[str, Any]) -> str:
+    """The deterministic research signals for this run, or a notice that none ran.
+
+    An absent signal block must not read as a clean slate. A run with no
+    research anchor is the configuration that produced three different verdicts
+    for one ticker on one date, and the agent deciding should know it is in that
+    configuration rather than assume the silence means nothing was found.
+    """
+    block = state.get("signal_block")
+    if isinstance(block, str) and block.strip():
+        return block
+    return (
+        "## Research signals\n\n"
+        "No deterministic research signal was available for this run. You are "
+        "therefore deciding from the analysts' reading alone, with no "
+        "reproducible anchor -- treat your own conclusion as correspondingly "
+        "less reliable, and say so in your conviction."
+    )
+
+
 def get_portfolio_context_from_state(state: Mapping[str, Any]) -> str:
     """Return the caller's portfolio block, or a notice that none was given.
 

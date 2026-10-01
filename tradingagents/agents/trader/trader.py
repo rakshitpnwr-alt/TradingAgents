@@ -8,6 +8,7 @@ from tradingagents.agents.context import (
     get_instrument_context_from_state,
     get_language_instruction,
     get_portfolio_context_from_state,
+    get_signal_block_from_state,
 )
 from tradingagents.agents.schemas import TraderProposal, render_trader_proposal
 from tradingagents.agents.structured import (
@@ -23,6 +24,7 @@ def create_trader(llm):
     def trader_node(state):
         company_name = state["company_of_interest"]
         instrument_context = get_instrument_context_from_state(state)
+        signal_block = get_signal_block_from_state(state)
         investment_plan = state["investment_plan"]
         # The research plan digests the debate but loses exact price structure;
         # give the Trader the technical market report so entry/stop levels are
@@ -66,6 +68,8 @@ def create_trader(llm):
                 "content": (
                     f"Here is the research team's investment plan for {company_name}. "
                     f"{instrument_context}\n\n"
+                    f"{signal_block}"
+                    "\n\nThe research signal above has already chosen the side. Your job is conviction and size, not direction. If you believe the signal is wrong, say so explicitly and give the evidence -- never trade against it silently, and never restate its direction as though you derived it.\n\n"
                     f"{report_section}"
                     f"{portfolio_context}\n\n"
                     f"Proposed Investment Plan:\n{investment_plan}\n\n"
