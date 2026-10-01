@@ -9,7 +9,7 @@ from stockstats import wrap
 
 from tradingagents.dataflows.errors import NoMarketDataError, VendorError
 from tradingagents.dataflows.symbols import crypto_base, normalize_symbol
-from tradingagents.dataflows.vendors.yahoo.common import raise_for_empty, yf_retry
+from tradingagents.dataflows.vendors.yahoo.common import price_decimals, raise_for_empty, yf_retry
 from tradingagents.dataflows.vendors.yahoo.ohlcv import _assert_ohlcv_not_stale, load_ohlcv
 
 logger = logging.getLogger(__name__)
@@ -180,11 +180,17 @@ def get_YFin_data_online(
     # turns into one clear unavailable signal (#1021).
     _assert_ohlcv_not_stale(data, end_date, symbol, canonical)
 
-    # Round numerical values to 2 decimal places for cleaner display
+    # Round prices to the precision the instrument is actually quoted in. A flat
+    # 2 decimals reported EURUSD's entire two-month decline as five distinct
+    # closes (see price_decimals). Taken from the median close, so one odd bar
+    # cannot set the precision for the whole series.
     numeric_columns = ["Open", "High", "Low", "Close", "Adj Close"]
+    decimals = price_decimals(
+        data["Close"].median() if "Close" in data.columns else None
+    )
     for col in numeric_columns:
         if col in data.columns:
-            data[col] = data[col].round(2)
+            data[col] = data[col].round(decimals)
 
     csv_string = data.to_csv()
 

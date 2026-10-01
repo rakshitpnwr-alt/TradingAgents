@@ -80,9 +80,18 @@ def _clean_dataframe(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def _fill_price_gaps(data: pd.DataFrame) -> pd.DataFrame:
-    """Drop rows with no close and forward/back-fill remaining price gaps so
-    indicators compute on a continuous series."""
-    price_cols = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in data.columns]
+    """Drop rows with no close and forward/back-fill remaining PRICE gaps so
+    indicators compute on a continuous series.
+
+    Volume is deliberately not filled. A price is a level, so carrying the last
+    one across a gap asserts only that it did not change. Volume is a flow, and
+    carrying it forward invents trading that never happened: a bar whose volume
+    the vendor has not reported would be handed the previous session's count,
+    and a volume-weighted indicator computed on it then reads as
+    volume-confirmed when nothing confirmed it. Left as NaN, the market
+    vendor's volume guard sees it for what it is.
+    """
+    price_cols = [c for c in ["Open", "High", "Low", "Close"] if c in data.columns]
     # copy() so a filtered (sliced) input is written to safely, not via a view.
     data = data.dropna(subset=["Close"]).copy()
     data[price_cols] = data[price_cols].ffill().bfill()

@@ -74,3 +74,41 @@ def yf_retry(func, max_retries=3, base_delay=2.0):
             if _answered_empty(exc):
                 return None
             raise VendorUnavailableError(f"Yahoo Finance request failed: {type(exc).__name__}") from exc
+
+
+# How many decimals a price needs to stay informative at a given magnitude.
+#
+# A flat 2 decimals was applied to every instrument. For an equity or gold that
+# is finer than the quoted increment, but for a non-JPY forex pair it erases the
+# market: EURUSD trades in pips of 0.0001, so a real 2026-09 series moving
+# 1.13372 / 1.13418 / 1.13295 / 1.13511 / 1.13337 rendered as 1.13 / 1.13 /
+# 1.13 / 1.14 / 1.13 -- five distinct closes collapsed to two, a 22-pip range
+# reported as 100 pips, and a smooth drift reported as a staircase. The market
+# analyst was told to treat that as the source of truth for exact price claims.
+#
+# Chosen by magnitude rather than by a currency-convention table, so it needs no
+# maintenance and covers equities, crypto, metals and indices by the same rule.
+# At 100+ the quoted increment really is 0.01 -- which is also the pip for the
+# JPY pairs, the one FX family this does not need to widen.
+PRICE_DECIMALS_BY_MAGNITUDE = ((100.0, 2), (1.0, 5))
+PRICE_DECIMALS_SUB_UNIT = 6
+
+
+def price_decimals(reference) -> int:
+    """Decimals to round prices to, given a representative price level.
+
+    ``reference`` should be a typical price for the instrument (the median close
+    of the frame, not one bar), so a single odd print cannot change the
+    precision of the whole series. Unusable input falls back to 2, the
+    historical behaviour.
+    """
+    try:
+        magnitude = abs(float(reference))
+    except (TypeError, ValueError):
+        return 2
+    if magnitude != magnitude or magnitude == 0:  # NaN or zero: no information
+        return 2
+    for threshold, decimals in PRICE_DECIMALS_BY_MAGNITUDE:
+        if magnitude >= threshold:
+            return decimals
+    return PRICE_DECIMALS_SUB_UNIT

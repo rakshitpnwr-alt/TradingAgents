@@ -17,6 +17,7 @@ from stockstats import wrap
 
 from tradingagents.dataflows.errors import NoMarketDataError
 from tradingagents.dataflows.symbols import normalize_symbol
+from tradingagents.dataflows.vendors.yahoo.common import price_decimals
 from tradingagents.dataflows.vendors.yahoo.ohlcv import load_ohlcv
 
 # A fixed, common indicator set so the snapshot is the same shape every run.
@@ -49,7 +50,23 @@ def _verified_rows(symbol: str, as_of_date: str) -> pd.DataFrame:
     return df
 
 
+# Sub-unit values are rendered to significant figures rather than a fixed number
+# of decimals. The snapshot table mixes price levels with indicator readings, and
+# an indicator can be far smaller than the price it came from: EURUSD's macd of
+# -0.00581293 flattened to "-0.00" at two decimals, and six fixed decimals would
+# still clip it. At or above 1 the shared price_decimals tiers apply, so the
+# snapshot and the CSV never disagree about precision, and a large price keeps
+# its cents (BTC 83624.79) instead of being truncated to six significant figures.
+_SUB_UNIT_SIG_FIGS = 6
+
+
 def _fmt(value) -> str:
+    """Render one snapshot cell, keeping enough precision to be quotable.
+
+    This table is handed to the analyst as the source of truth for exact price
+    claims, so it must not be the least precise number in the run. At a flat two
+    decimals it reported EURUSD's close as 1.13 and its macd as -0.00.
+    """
     if value is None or pd.isna(value):
         return "N/A"
     if isinstance(value, pd.Timestamp):
@@ -59,7 +76,13 @@ def _fmt(value) -> str:
     if isinstance(value, (int,)):
         return str(value)
     if isinstance(value, float):
-        return f"{value:.2f}"
+        # Whole numbers at scale are counts (volume), not prices; decimals on
+        # them are noise.
+        if value == int(value) and abs(value) >= 1000:
+            return str(int(value))
+        if value != 0 and abs(value) < 1:
+            return f"{value:.{_SUB_UNIT_SIG_FIGS}g}"
+        return f"{value:.{price_decimals(value)}f}"
     return str(value)
 
 
