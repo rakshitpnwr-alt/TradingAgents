@@ -15,6 +15,138 @@ from tradingagents.dataflows.vendors.yahoo.ohlcv import _assert_ohlcv_not_stale,
 logger = logging.getLogger(__name__)
 
 
+# Indicators computed from volume. stockstats does not report that volume was
+# missing: on a zero-volume frame it returns an all-NaN series for ``vwma`` and
+# a CONSTANT 0.5 for ``mfi``. The 0.5 is the dangerous one, because the
+# indicator is described to the agent with 20/80 oversold/overbought
+# thresholds, so a permanent 0.5 reads as a standing oversold signal on every
+# bar of every spot forex pair and cash index -- a fabricated reading that
+# looks like a real one. Verified directly against stockstats with Volume=0 and
+# with Volume=NaN; both produce the same values.
+_VOLUME_INDICATORS = frozenset({"vwma", "mfi"})
+
+# Every indicator the vendor can serve, with the description handed to the
+# agent alongside the values. Module level so it is built once rather than
+# per call, and so a test can assert that any volume-derived indicator added
+# here is also listed in _VOLUME_INDICATORS and therefore guarded.
+INDICATOR_DESCRIPTIONS = {
+    # Moving Averages
+    "close_50_sma": (
+        "50 SMA: A medium-term trend indicator. "
+        "Usage: Identify trend direction and serve as dynamic support/resistance. "
+        "Tips: It lags price; combine with faster indicators for timely signals."
+    ),
+    "close_200_sma": (
+        "200 SMA: A long-term trend benchmark. "
+        "Usage: Confirm overall market trend and identify golden/death cross setups. "
+        "Tips: It reacts slowly; best for strategic trend confirmation rather than frequent trading entries."
+    ),
+    "close_10_ema": (
+        "10 EMA: A responsive short-term average. "
+        "Usage: Capture quick shifts in momentum and potential entry points. "
+        "Tips: Prone to noise in choppy markets; use alongside longer averages for filtering false signals."
+    ),
+    # MACD Related
+    "macd": (
+        "MACD: Computes momentum via differences of EMAs. "
+        "Usage: Look for crossovers and divergence as signals of trend changes. "
+        "Tips: Confirm with other indicators in low-volatility or sideways markets."
+    ),
+    "macds": (
+        "MACD Signal: An EMA smoothing of the MACD line. "
+        "Usage: Use crossovers with the MACD line to trigger trades. "
+        "Tips: Should be part of a broader strategy to avoid false positives."
+    ),
+    "macdh": (
+        "MACD Histogram: Shows the gap between the MACD line and its signal. "
+        "Usage: Visualize momentum strength and spot divergence early. "
+        "Tips: Can be volatile; complement with additional filters in fast-moving markets."
+    ),
+    # Momentum Indicators
+    "rsi": (
+        "RSI: Measures momentum to flag overbought/oversold conditions. "
+        "Usage: Apply 70/30 thresholds and watch for divergence to signal reversals. "
+        "Tips: In strong trends, RSI may remain extreme; always cross-check with trend analysis."
+    ),
+    # Volatility Indicators
+    "boll": (
+        "Bollinger Middle: A 20 SMA serving as the basis for Bollinger Bands. "
+        "Usage: Acts as a dynamic benchmark for price movement. "
+        "Tips: Combine with the upper and lower bands to effectively spot breakouts or reversals."
+    ),
+    "boll_ub": (
+        "Bollinger Upper Band: Typically 2 standard deviations above the middle line. "
+        "Usage: Signals potential overbought conditions and breakout zones. "
+        "Tips: Confirm signals with other tools; prices may ride the band in strong trends."
+    ),
+    "boll_lb": (
+        "Bollinger Lower Band: Typically 2 standard deviations below the middle line. "
+        "Usage: Indicates potential oversold conditions. "
+        "Tips: Use additional analysis to avoid false reversal signals."
+    ),
+    "atr": (
+        "ATR: Averages true range to measure volatility. "
+        "Usage: Set stop-loss levels and adjust position sizes based on current market volatility. "
+        "Tips: It's a reactive measure, so use it as part of a broader risk management strategy."
+    ),
+    # Volume-Based Indicators
+    "vwma": (
+        "VWMA: A moving average weighted by volume. "
+        "Usage: Confirm trends by integrating price action with volume data. "
+        "Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses."
+    ),
+    "mfi": (
+        "MFI: The Money Flow Index is a momentum indicator that uses both price and volume to measure buying and selling pressure. "
+        "Usage: Identify overbought (>80) or oversold (<20) conditions and confirm the strength of trends or reversals. "
+        "Tips: Use alongside RSI or MACD to confirm signals; divergence between price and MFI can indicate potential reversals."
+    ),
+}
+
+
+def _reports_volume(data) -> bool:
+    """True when the frame carries volume a volume indicator could use.
+
+    Decided from the data rather than from the asset type, because the split is
+    not along asset-class lines: spot forex (``EURUSD=X``) and cash indices
+    (``DX-Y.NYB``) are quoted without volume, while the gold *future* (``GC=F``)
+    reports it. Only the frame knows.
+    """
+    if data is None or "Volume" not in getattr(data, "columns", ()):
+        return False
+    volume = pd.to_numeric(data["Volume"], errors="coerce")
+    return bool((volume.fillna(0) > 0).any())
+
+
+def _volume_indicator_refusal(symbol: str, indicator: str, as_of_date: str) -> str | None:
+    """Why ``indicator`` cannot be computed for ``symbol``, or None to proceed.
+
+    Returns prose instead of raising so the router does not re-ask the next
+    vendor: no vendor reports volume for spot forex, so a fallback would spend
+    another call and then report a generic failure in place of the real reason.
+    A failed load returns None so the normal path runs and raises its own typed
+    error -- this helper only ever answers the volume question.
+    """
+    try:
+        data = load_ohlcv(symbol, as_of_date)
+    except Exception:
+        return None
+    if _reports_volume(data):
+        return None
+    canonical = normalize_symbol(symbol)
+    return (
+        f"## {indicator} is not available for {canonical}\n\n"
+        f"The vendor reports no trading volume for this instrument, and "
+        f"{indicator} is computed from volume. Spot forex pairs and cash indices "
+        f"are quoted without volume. This is a property of the instrument, not "
+        f"an outage, so it will not resolve on a retry or at another vendor -- "
+        f"use a price-based indicator instead (close_50_sma, close_200_sma, "
+        f"close_10_ema, macd, macds, macdh, rsi, boll, boll_ub, boll_lb, atr).\n\n"
+        f"Absent volume is not a volume reading. It is neither high nor low, and "
+        f"no conclusion about participation, liquidity or conviction follows from "
+        f"it -- do not describe this instrument as lacking volume confirmation."
+    )
+
+
 def get_YFin_data_online(
     symbol: Annotated[str, "ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
@@ -74,83 +206,16 @@ def get_stock_stats_indicators_window(
     look_back_days: Annotated[int, "how many days to look back"],
 ) -> str:
 
-    best_ind_params = {
-        # Moving Averages
-        "close_50_sma": (
-            "50 SMA: A medium-term trend indicator. "
-            "Usage: Identify trend direction and serve as dynamic support/resistance. "
-            "Tips: It lags price; combine with faster indicators for timely signals."
-        ),
-        "close_200_sma": (
-            "200 SMA: A long-term trend benchmark. "
-            "Usage: Confirm overall market trend and identify golden/death cross setups. "
-            "Tips: It reacts slowly; best for strategic trend confirmation rather than frequent trading entries."
-        ),
-        "close_10_ema": (
-            "10 EMA: A responsive short-term average. "
-            "Usage: Capture quick shifts in momentum and potential entry points. "
-            "Tips: Prone to noise in choppy markets; use alongside longer averages for filtering false signals."
-        ),
-        # MACD Related
-        "macd": (
-            "MACD: Computes momentum via differences of EMAs. "
-            "Usage: Look for crossovers and divergence as signals of trend changes. "
-            "Tips: Confirm with other indicators in low-volatility or sideways markets."
-        ),
-        "macds": (
-            "MACD Signal: An EMA smoothing of the MACD line. "
-            "Usage: Use crossovers with the MACD line to trigger trades. "
-            "Tips: Should be part of a broader strategy to avoid false positives."
-        ),
-        "macdh": (
-            "MACD Histogram: Shows the gap between the MACD line and its signal. "
-            "Usage: Visualize momentum strength and spot divergence early. "
-            "Tips: Can be volatile; complement with additional filters in fast-moving markets."
-        ),
-        # Momentum Indicators
-        "rsi": (
-            "RSI: Measures momentum to flag overbought/oversold conditions. "
-            "Usage: Apply 70/30 thresholds and watch for divergence to signal reversals. "
-            "Tips: In strong trends, RSI may remain extreme; always cross-check with trend analysis."
-        ),
-        # Volatility Indicators
-        "boll": (
-            "Bollinger Middle: A 20 SMA serving as the basis for Bollinger Bands. "
-            "Usage: Acts as a dynamic benchmark for price movement. "
-            "Tips: Combine with the upper and lower bands to effectively spot breakouts or reversals."
-        ),
-        "boll_ub": (
-            "Bollinger Upper Band: Typically 2 standard deviations above the middle line. "
-            "Usage: Signals potential overbought conditions and breakout zones. "
-            "Tips: Confirm signals with other tools; prices may ride the band in strong trends."
-        ),
-        "boll_lb": (
-            "Bollinger Lower Band: Typically 2 standard deviations below the middle line. "
-            "Usage: Indicates potential oversold conditions. "
-            "Tips: Use additional analysis to avoid false reversal signals."
-        ),
-        "atr": (
-            "ATR: Averages true range to measure volatility. "
-            "Usage: Set stop-loss levels and adjust position sizes based on current market volatility. "
-            "Tips: It's a reactive measure, so use it as part of a broader risk management strategy."
-        ),
-        # Volume-Based Indicators
-        "vwma": (
-            "VWMA: A moving average weighted by volume. "
-            "Usage: Confirm trends by integrating price action with volume data. "
-            "Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses."
-        ),
-        "mfi": (
-            "MFI: The Money Flow Index is a momentum indicator that uses both price and volume to measure buying and selling pressure. "
-            "Usage: Identify overbought (>80) or oversold (<20) conditions and confirm the strength of trends or reversals. "
-            "Tips: Use alongside RSI or MACD to confirm signals; divergence between price and MFI can indicate potential reversals."
-        ),
-    }
 
-    if indicator not in best_ind_params:
+    if indicator not in INDICATOR_DESCRIPTIONS:
         raise ValueError(
-            f"Indicator {indicator} is not supported. Please choose from: {list(best_ind_params.keys())}"
+            f"Indicator {indicator} is not supported. Please choose from: {list(INDICATOR_DESCRIPTIONS.keys())}"
         )
+
+    if indicator in _VOLUME_INDICATORS:
+        refusal = _volume_indicator_refusal(symbol, indicator, as_of_date)
+        if refusal:
+            return refusal
 
     end_date = as_of_date
     as_of_dt = datetime.strptime(as_of_date, "%Y-%m-%d")
@@ -198,7 +263,7 @@ def get_stock_stats_indicators_window(
         f"## {indicator} values from {before.strftime('%Y-%m-%d')} to {end_date}:\n\n"
         + ind_string
         + "\n\n"
-        + best_ind_params.get(indicator, "No description available.")
+        + INDICATOR_DESCRIPTIONS.get(indicator, "No description available.")
     )
 
     return result_str
@@ -307,6 +372,15 @@ def get_stock_stats(
     ],
 ):
     data = load_ohlcv(symbol, as_of_date)
+    # Guarded here too: the per-day fallback in
+    # ``get_stock_stats_indicators_window`` reaches stockstats through this
+    # function, so a guard only at the windowed entry point would be bypassed
+    # the moment the bulk path failed.
+    if indicator in _VOLUME_INDICATORS and not _reports_volume(data):
+        return (
+            f"N/A: {indicator} needs volume, which the vendor does not report "
+            f"for this instrument (this is not a low-volume reading)"
+        )
     df = wrap(data)
     df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
     as_of_str = pd.to_datetime(as_of_date).strftime("%Y-%m-%d")

@@ -29,9 +29,9 @@ from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from tradingagents.dataflows.date_window import coverage_gap, in_window
 from tradingagents.dataflows.archive import archived
-from tradingagents.dataflows.symbols import crypto_base
+from tradingagents.dataflows.date_window import coverage_gap, in_window
+from tradingagents.dataflows.symbols import instrument_kind, search_term
 
 logger = logging.getLogger(__name__)
 
@@ -81,22 +81,36 @@ DEFAULT_SUBREDDITS = ("wallstreetbets", "stocks", "investing")
 
 # US-equity subreddits return essentially nothing for a crypto pair: a BTC-USD
 # run searched all three and found zero posts, leaving the sentiment analyst on
-# StockTwits alone. Crypto discussion lives in its own subreddits.
+# StockTwits alone. Crypto discussion lives in its own subreddits, and FX and
+# metals in theirs again.
 CRYPTO_SUBREDDITS = ("CryptoCurrency", "Bitcoin", "BitcoinMarkets")
+FOREX_SUBREDDITS = ("Forex", "Daytrading")
+COMMODITY_SUBREDDITS = ("Gold", "Silverbugs", "commodities")
+
+_SUBREDDITS_BY_KIND = {
+    "stock": DEFAULT_SUBREDDITS,
+    "crypto": CRYPTO_SUBREDDITS,
+    "forex": FOREX_SUBREDDITS,
+    "commodity": COMMODITY_SUBREDDITS,
+}
 
 
-def resolve_subreddits(is_crypto: bool) -> tuple[str, ...]:
-    """Subreddits for this asset type, config-overridable."""
+def resolve_subreddits(kind: str) -> tuple[str, ...]:
+    """Subreddits for this instrument kind, config-overridable.
+
+    ``kind`` is an ``instrument_kind`` value ("stock", "crypto", "forex",
+    "commodity"); an unrecognised one falls back to the equity set, which is
+    what the pipeline searched before any of these splits existed.
+    """
+    kind = kind if kind in _SUBREDDITS_BY_KIND else "stock"
     try:
         from tradingagents.dataflows.config import get_config
-        configured = (get_config().get("reddit_subreddits") or {}).get(
-            "crypto" if is_crypto else "stock"
-        )
+        configured = (get_config().get("reddit_subreddits") or {}).get(kind)
         if configured:
             return tuple(configured)
     except Exception:
         pass
-    return CRYPTO_SUBREDDITS if is_crypto else DEFAULT_SUBREDDITS
+    return _SUBREDDITS_BY_KIND[kind]
 
 # Reddit's maximum page size. A week of posts for a ticker across the default
 # subreddits fits well inside one page, which keeps a high-volume subreddit from
@@ -278,12 +292,14 @@ def fetch_reddit_posts(
     flag per post and a note line that heads the block. It runs before the
     per-subreddit cut, so the posts it keeps fill the slots.
     """
-    # Crypto reaches us as a Yahoo pair (BTC-USD); search Reddit for the base
-    # ("BTC") so the query actually matches discussion instead of near-nothing.
-    base = crypto_base(ticker)
-    ticker = base or ticker
+    # Instruments reach us as vendor symbols (BTC-USD, EURUSD=X, GC=F), none of
+    # which people type in posts. Search for what they do type -- "BTC",
+    # "EURUSD", "gold" -- so the query matches discussion instead of
+    # near-nothing, and pick the subreddits where that discussion happens.
+    kind = instrument_kind(ticker)
+    ticker = search_term(ticker) or ticker
     if subreddits is None:
-        subreddits = resolve_subreddits(is_crypto=base is not None)
+        subreddits = resolve_subreddits(kind)
     subreddits = list(subreddits)
     label = ", ".join(f"r/{s}" for s in subreddits)
     fetched = _fetch_subreddit_rss(ticker, "+".join(subreddits), _FEED_PAGE, timeout)

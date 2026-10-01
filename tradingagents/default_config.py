@@ -147,6 +147,14 @@ def build_default_config() -> dict:
         "reddit_subreddits": {
             "stock":  ["wallstreetbets", "stocks", "investing"],
             "crypto": ["CryptoCurrency", "Bitcoin", "BitcoinMarkets"],
+            # FX and metals discussion does not live in the equity subreddits:
+            # a EURUSD search across wallstreetbets/stocks/investing returns
+            # near-nothing, the same way it did for crypto pairs. These sets are
+            # thinner in signal than the equity ones, which is a property of
+            # where retail FX and metals traders actually post; override here if
+            # you follow better ones.
+            "forex": ["Forex", "Daytrading"],
+            "commodity": ["Gold", "Silverbugs", "commodities"],
         },
         # Data vendor configuration
         # Category-level configuration (default for all tools in category).
@@ -198,6 +206,15 @@ def build_default_config() -> dict:
             ".SS":  "000001.SS",   # Shanghai (SSE Composite)
             ".SZ":  "399001.SZ",   # Shenzhen (SZSE Component)
             ".SA":  "^BVSP",       # B3 Brazil (Ibovespa)
+            # Spot FX and futures are absolute-return positions: there is no
+            # equity index they carry beta to, and measuring a long EURUSD
+            # against the S&P would credit or blame it for a market it is not
+            # exposed to. The honest hurdle is the cash a margin account earns
+            # while the position is open, so alpha is measured against
+            # short-dated T-bills (BIL). Matched by suffix, so it covers every
+            # pair (EURUSD=X) and every contract (GC=F) without further entries.
+            "=X":   "BIL",         # spot forex -> cash (1-3 month T-bills)
+            "=F":   "BIL",         # futures    -> cash (1-3 month T-bills)
             "":     "SPY",         # default for US-listed tickers (no suffix)
         },
 

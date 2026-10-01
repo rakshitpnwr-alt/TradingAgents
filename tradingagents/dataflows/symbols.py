@@ -178,3 +178,98 @@ def safe_ticker_component(value: str, *, max_len: int = 32) -> str:
     if set(value) == {"."}:
         raise ValueError(f"ticker cannot consist solely of dots: {value!r}")
     return value
+
+
+# ---------------------------------------------------------------------------
+# Instrument classification and search terms
+#
+# Both rules live here, beside ``normalize_symbol``, so the CLI, the agents and
+# the vendors cannot disagree about what an instrument is or what to search for.
+# ---------------------------------------------------------------------------
+
+# Yahoo suffixes that say what kind of instrument a canonical symbol is: ``=X``
+# is a spot forex pair (``EURUSD=X``), ``=F`` an exchange-traded future
+# (``GC=F``). Purely syntactic, and applied to the CANONICAL symbol, so a broker
+# spelling classifies the same as the Yahoo one -- ``XAUUSD`` and ``GC=F`` are
+# both a future, ``EURUSD`` and ``EURUSD=X`` both spot forex.
+_FOREX_SUFFIX = "=X"
+_FUTURES_SUFFIX = "=F"
+
+# Futures roots -> the word a news or forum search should actually use. A vendor
+# symbol is not a search term: a query for ``GC=F`` matches essentially nothing,
+# which is the same failure that left crypto sentiment empty until ``BTC-USD``
+# was searched as ``BTC``.
+_FUTURES_SEARCH_TERMS = {
+    "GC": "gold",
+    "SI": "silver",
+    "PL": "platinum",
+    "PA": "palladium",
+    "HG": "copper",
+    "CL": "crude oil",
+    "BZ": "Brent crude",
+    "NG": "natural gas",
+}
+
+# The kinds ``instrument_kind`` can return. Kept as plain strings because the
+# data layer must not import the CLI's enum; ``AssetType`` is built from these
+# values, so the two stay in step by construction.
+KIND_STOCK = "stock"
+KIND_CRYPTO = "crypto"
+KIND_FOREX = "forex"
+KIND_COMMODITY = "commodity"
+
+
+def instrument_kind(raw: str) -> str:
+    """Classify ``raw`` as ``crypto``, ``forex``, ``commodity`` or ``stock``.
+
+    Classification runs on the canonical symbol, so it agrees with what the data
+    path will actually fetch rather than with how the user happened to type it.
+
+    ``=F`` is read as a commodity because that is what the alias table maps to
+    it (metals and energy) and what callers use it for. A financial future such
+    as ``ES=F`` also lands here; the classification is still right about the two
+    things the pipeline does with it -- there are no company filings to fetch,
+    and the price is a rolled futures series rather than a cash quote.
+
+    Unknown or empty input classifies as ``stock``: that is the pipeline's
+    historical default, and a classifier is not the place to raise.
+    """
+    if not isinstance(raw, str) or not raw.strip():
+        return KIND_STOCK
+    canonical = normalize_symbol(raw)
+    if crypto_base(canonical) is not None:
+        return KIND_CRYPTO
+    if canonical.endswith(_FOREX_SUFFIX):
+        return KIND_FOREX
+    if canonical.endswith(_FUTURES_SUFFIX):
+        return KIND_COMMODITY
+    return KIND_STOCK
+
+
+def search_term(raw: str) -> str:
+    """The text to search news and forums for, for the instrument ``raw`` names.
+
+    Vendor symbols make poor queries. ``BTC-USD``, ``EURUSD=X`` and ``GC=F``
+    each match almost no discussion, and the sentiment analyst reads that empty
+    result as an absence of opinion rather than as a query that never had a
+    chance. Returns the base coin (``BTC``), the bare pair (``EURUSD``), or the
+    commodity's name (``gold``); anything else is returned canonicalised and
+    unchanged.
+    """
+    if not isinstance(raw, str) or not raw.strip():
+        return ""
+    canonical = normalize_symbol(raw)
+    base = crypto_base(canonical)
+    if base:
+        return base
+    term = canonical
+    if canonical.endswith(_FOREX_SUFFIX):
+        term = canonical[: -len(_FOREX_SUFFIX)]
+    elif canonical.endswith(_FUTURES_SUFFIX):
+        root = canonical[: -len(_FUTURES_SUFFIX)]
+        term = _FUTURES_SEARCH_TERMS.get(root, root)
+    # A degenerate symbol (a bare suffix like "=X") strips to nothing, and an
+    # empty query is not a search -- it comes back with no posts, which reads as
+    # no discussion. Fall back to the canonical symbol: a query that finds
+    # nothing is still better than one that asked nothing.
+    return term.strip() or canonical

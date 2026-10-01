@@ -11,5 +11,10 @@ class AnalystType(StrEnum):
 
 
 class AssetType(StrEnum):
+    # Values match ``tradingagents.dataflows.symbols.instrument_kind``, which is
+    # the single rule that decides an instrument's kind; this enum is the CLI's
+    # typed view of the same vocabulary.
     STOCK = "stock"
     CRYPTO = "crypto"
+    FOREX = "forex"
+    COMMODITY = "commodity"

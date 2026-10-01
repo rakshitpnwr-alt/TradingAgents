@@ -12,11 +12,42 @@ TOOLS = (
 )
 
 
+# The volume-based indicators, kept separate so they can be withheld from
+# instruments that report no volume. Offering vwma for a spot forex pair spends
+# one of the analyst's eight slots on a series that comes back empty, and
+# invites it to describe the emptiness as weak participation.
+_VOLUME_SECTION = """
+
+Volume-Based Indicators:
+- vwma: VWMA: A moving average weighted by volume. Usage: Confirm trends by integrating price action with volume data. Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses.
+"""
+
+# Asset types quoted without volume. Note this is NOT every non-equity type:
+# the gold *future* (GC=F, "commodity") does report volume, so it keeps the
+# section. The vendor enforces the same rule from the data side, per instrument,
+# which catches the volume-less cash indices that classify as "stock".
+_VOLUMELESS_ASSET_TYPES = frozenset({"forex"})
+
+
+def volume_section_for(asset_type: str) -> str:
+    """The volume-indicator block to offer this asset type, or just a newline.
+
+    A separate function so the rule can be asserted directly: the alternative is
+    a test that drives the whole analyst node through a fake LLM to inspect one
+    paragraph of its system prompt.
+    """
+    if asset_type in _VOLUMELESS_ASSET_TYPES:
+        return "\n"
+    return _VOLUME_SECTION
+
+
 def create_market_analyst(llm):
 
     def market_analyst_node(state):
         current_date = state["trade_date"]
         instrument_context = get_instrument_context_from_state(state)
+        asset_type = state.get("asset_type", "stock")
+        volume_section = volume_section_for(asset_type)
 
         system_message = (
             """You are a trading assistant tasked with analyzing financial markets. Your role is to select the **most relevant indicators** for a given market condition or trading strategy from the following list. The goal is to choose up to **8 indicators** that provide complementary insights without redundancy. Categories and each category's indicators are:
@@ -38,11 +69,9 @@ Volatility Indicators:
 - boll: Bollinger Middle: A 20 SMA serving as the basis for Bollinger Bands. Usage: Acts as a dynamic benchmark for price movement. Tips: Combine with the upper and lower bands to effectively spot breakouts or reversals.
 - boll_ub: Bollinger Upper Band: Typically 2 standard deviations above the middle line. Usage: Signals potential overbought conditions and breakout zones. Tips: Confirm signals with other tools; prices may ride the band in strong trends.
 - boll_lb: Bollinger Lower Band: Typically 2 standard deviations below the middle line. Usage: Indicates potential oversold conditions. Tips: Use additional analysis to avoid false reversal signals.
-- atr: ATR: Averages true range to measure volatility. Usage: Set stop-loss levels and adjust position sizes based on current market volatility. Tips: It's a reactive measure, so use it as part of a broader risk management strategy.
-
-Volume-Based Indicators:
-- vwma: VWMA: A moving average weighted by volume. Usage: Confirm trends by integrating price action with volume data. Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses.
-
+- atr: ATR: Averages true range to measure volatility. Usage: Set stop-loss levels and adjust position sizes based on current market volatility. Tips: It's a reactive measure, so use it as part of a broader risk management strategy."""
+            + volume_section
+            + """
 - Select indicators that provide diverse and complementary information. Avoid redundancy (e.g., do not select both rsi and stochrsi). Also briefly explain why they are suitable for the given market context. When you tool call, please use the exact name of the indicators provided above as they are defined parameters, otherwise your call will fail. Please make sure to call get_stock_data first to retrieve the CSV that is needed to generate indicators. Then use get_indicators with the specific indicator names.
 
 Before writing the final report, call get_verified_market_snapshot for this ticker and the current date, and treat it as the source of truth for any exact OHLCV, price-level, or indicator-value claim. If another tool's output conflicts with the verified snapshot, flag the discrepancy rather than inventing a reconciled number. Do not claim historical validation, support/resistance bounces, or exact percentage moves unless they are directly supported by tool output with concrete dates and prices.

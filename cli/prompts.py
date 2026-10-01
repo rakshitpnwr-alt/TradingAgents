@@ -117,17 +117,38 @@ def normalize_ticker_symbol(ticker: str) -> str:
 
 def detect_asset_type(ticker: str) -> AssetType:
     """Classify on the canonical symbol so e.g. BTCUSD and BTC-USDT both read as
-    crypto (#981/#982), matching what the data path will actually fetch."""
-    canonical = normalize_ticker_symbol(ticker)
-    if canonical.endswith(CRYPTO_SUFFIXES):
-        return AssetType.CRYPTO
-    return AssetType.STOCK
+    crypto (#981/#982), and EURUSD / XAUUSD as forex / commodity, matching what
+    the data path will actually fetch.
+
+    The rule itself lives in the data layer (``instrument_kind``) so the CLI and
+    the vendors cannot disagree about what an instrument is. The local fallback
+    keeps the CLI working when the data layer is not importable, matching how
+    ``normalize_ticker_symbol`` degrades.
+    """
+    try:
+        from tradingagents.dataflows.symbols import instrument_kind
+
+        return AssetType(instrument_kind(ticker))
+    except Exception:
+        canonical = normalize_ticker_symbol(ticker)
+        if canonical.endswith(CRYPTO_SUFFIXES):
+            return AssetType.CRYPTO
+        return AssetType.STOCK
+
+
+# Asset types that have no issuer and therefore no filings: there is no income
+# statement for a currency pair, a futures contract or a coin. Offering the
+# fundamentals analyst for one produces a report assembled from nothing, so it
+# is withheld rather than left to fail per-tool.
+NO_FUNDAMENTALS_ASSET_TYPES = frozenset(
+    {AssetType.CRYPTO, AssetType.FOREX, AssetType.COMMODITY}
+)
 
 
 def filter_analysts_for_asset_type(
     analysts: list[AnalystType], asset_type: AssetType
 ) -> list[AnalystType]:
-    if asset_type != AssetType.CRYPTO:
+    if asset_type not in NO_FUNDAMENTALS_ASSET_TYPES:
         return analysts
     return [
         analyst

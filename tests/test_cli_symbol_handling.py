@@ -50,8 +50,13 @@ def test_ticker_input_validation(value, ok):
     ("BTC-USD", AssetType.CRYPTO),
     ("ETHUSD", AssetType.CRYPTO),
     ("AAPL", AssetType.STOCK),
-    ("GC=F", AssetType.STOCK),
     ("600519.SS", AssetType.STOCK),
+    # GC=F read as STOCK until forex/commodity existed, which handed the gold
+    # future a fundamentals analyst and an S&P benchmark. It is a contract.
+    ("GC=F", AssetType.COMMODITY),
+    ("XAUUSD", AssetType.COMMODITY),
+    ("EURUSD", AssetType.FOREX),
+    ("EURUSD=X", AssetType.FOREX),
 ])
 def test_detect_asset_type(raw, expected):
     assert detect_asset_type(raw) == expected
