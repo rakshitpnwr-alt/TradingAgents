@@ -218,5 +218,18 @@ SIGNAL = Signal(
         "Pegged or heavily managed currencies, whose residual reflects a policy "
         "choice rather than a market view.",
     ),
+    our_history=(
+        "Not measurable as a strategy, and that is a property of the signal "
+        "rather than a gap in the testing: it returns DIAGNOSTIC and holds no "
+        "position, so there is no return stream to score. Scoring it would mean "
+        "inventing a trading rule it does not make and reporting that "
+        "invention's performance under the paper's name. What it offers is the "
+        "decomposition itself, which is arithmetic on prices rather than a "
+        "claim about future returns. One measured fact does bear on it: across "
+        "the nine-instrument book, volatility pooled to 6.1% where each "
+        "position targeted 10% -- nine independent bets would have pooled to "
+        "about 3.3%, so a basket of dollar pairs is substantially one bet. That "
+        "is the thing this signal exists to measure."
+    ),
     compute=compute,
 )

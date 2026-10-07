@@ -10,6 +10,33 @@ trade is short a disaster. The premium is the price of writing that insurance,
 which is why carry does not look like free money and should not be sized as if
 it were.
 
+Why this no longer sets direction
+---------------------------------
+It was built as a directional signal and has been demoted to a diagnostic,
+because it was finally tested. Twenty-five years of daily closes on the seven
+dollar majors, rebalanced monthly with costs charged, gave a pooled Sharpe of
+-0.21 at t=-1.04, losing to simply holding the basket. t=-1.04 cannot establish
+that the rule loses money -- that would be overstating in the other direction --
+but it certainly fails the fourth bar in ``base.py``: it has not survived on the
+instruments we trade.
+
+The failure was predictable from the deviations already recorded below, which is
+the best thing that can be said about it. The paper's premium comes from sorting
+37 currencies on forward discounts and trading the spread between the extremes;
+a single-pair differential built from policy rates keeps neither the
+cross-sectional diversification nor the tradable financing cost that produced
+it. The deviations field existed to flag exactly this risk, and the backtest
+collected on it.
+
+What survives is the differential itself, which is a real fact about what
+holding a position costs to finance, and which the trader has used well -- it
+read the 60-day-stale JPY leg correctly and sized down for it. So the number is
+still reported, with ``rule_would_imply`` recorded beside it so the demotion
+stays auditable. ``compute`` returns DIAGNOSTIC and ``consensus_direction`` does
+not let diagnostics vote. To promote it back, get forward discounts for the
+basket, implement the cross-sectional sort, and re-run ``backtest_signals.py``:
+the directional rule is still ``decide``, and the backtest still measures it.
+
 Why this was not built until now
 --------------------------------
 The signal layer shipped without carry because there was no verified source for
@@ -162,9 +189,18 @@ def compute(ticker: str, as_of_date: str) -> SignalResult:
 
     base_rate, base_date, base_series = fetched[base]
     quote_rate, quote_date, quote_series = fetched[quote]
-    direction, differential = decide(base, quote, base_rate, quote_rate)
+    # The rule still runs, and ``implied`` is what it says. It is reported as
+    # context rather than acted on -- see the demotion note at the top of this
+    # module and ``our_history`` below.
+    implied, differential = decide(base, quote, base_rate, quote_rate)
 
-    caveats = []
+    caveats = [
+        "This is context, not a trade. The differential is real and it is what "
+        "the rule implies, but the rule did not survive our own history "
+        "(pooled Sharpe -0.21, t=-1.04 over 25 years on seven majors), so it "
+        "does not set direction. Use it to understand what holding the "
+        "position costs or earns in financing, not as a reason to take it.",
+    ]
     for currency, (_rate, obs_date, series_id) in fetched.items():
         age = _age_days(obs_date, as_of_date)
         if age is not None and age > STALE_AFTER_DAYS:
@@ -181,18 +217,24 @@ def compute(ticker: str, as_of_date: str) -> SignalResult:
             f"for {base}, {RATE_SERIES[quote][1]} for {quote}), so part of this "
             f"spread is a term premium rather than a policy difference"
         )
-    if direction is Direction.FLAT:
+    if implied is Direction.FLAT:
         caveats.append(
             f"a {differential:+.2f}% differential is inside the cost of holding "
-            f"the position, so carry has no view here"
+            f"the position, so there is no carry worth naming either way here"
         )
 
     return SignalResult(
         name=NAME,
-        direction=direction,
+        # DIAGNOSTIC, not the direction the rule implies. ``consensus_direction``
+        # does not let diagnostics vote, which is the whole point: the
+        # differential informs the debate and cannot decide it.
+        direction=Direction.DIAGNOSTIC,
         value=differential,
         detail={
             "differential_pct": round(differential, 4),
+            # Kept so the demotion is auditable and reversible: this is what the
+            # rule would have said, visible to a reader without being acted on.
+            "rule_would_imply": implied.value,
             f"{base}_rate": base_rate,
             f"{quote}_rate": quote_rate,
             f"{base}_series": base_series,
@@ -221,9 +263,12 @@ SIGNAL = Signal(
         "short a disaster and the premium is the price of that insurance."
     ),
     definition=(
-        "Long the base currency when its short rate exceeds the quote "
-        f"currency's by more than {MIN_DIFFERENTIAL_PCT}%, short when it is "
-        "lower by that much, flat in between."
+        "The short-rate differential between the two legs of the pair. The "
+        f"underlying rule -- long the base when its rate exceeds the quote's by "
+        f"more than {MIN_DIFFERENTIAL_PCT}%, short when lower by that much, flat "
+        "in between -- is still computed and reported as `rule_would_imply`, but "
+        "it does NOT set direction: it failed on our own history. What this "
+        "contributes is the financing cost of holding the position, as context."
     ),
     deviations=(
         "The paper sorts 37 currencies into portfolios on forward discounts and "
@@ -250,6 +295,25 @@ SIGNAL = Signal(
         "analysis date, which inverts the differential without warning.",
         "Pegged or heavily managed currencies, where a wide differential is a "
         "policy stance rather than a return on offer.",
+    ),
+    our_history=(
+        "Measured on the seven dollar majors, 25 years of daily closes to "
+        "October 2026, rebalanced every 21 trading days with costs charged: "
+        "pooled Sharpe -0.21, t=-1.04. Three of seven pairs were positive, and "
+        "the book lost to holding the basket as well. t=-1.04 is not "
+        "significantly negative, so the honest statement is that there is NO "
+        "EVIDENCE this pays on our instruments -- not that it reliably loses. "
+        "This is the predictable price of the deviations listed above rather "
+        "than a surprise: the paper's premium comes from sorting 37 currencies "
+        "on forward discounts and trading the spread between the extremes, and "
+        "a single-pair differential built from policy rates keeps neither the "
+        "cross-sectional diversification nor the tradable financing cost that "
+        "produced it. On that evidence this signal was DEMOTED to a diagnostic: "
+        "it reports the differential and no longer picks a side, so a wide "
+        "differential is context about financing cost and not a reason for "
+        "conviction. Note also that five of the eight rate series publish "
+        "about 65 days late (AUD, CAD, CHF, JPY, NZD), so those legs trade on a "
+        "two-month-old rate in live runs exactly as they did in this test."
     ),
     compute=compute,
 )

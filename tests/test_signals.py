@@ -491,7 +491,8 @@ def test_carry_flags_a_stale_leg(monkeypatch):
         "JPY": (0.977, "2026-08-01"),   # 60 days behind
     }))
     result = carry.compute("USDJPY=X", "2026-09-30")
-    assert result.direction is Direction.LONG
+    assert result.direction is Direction.DIAGNOSTIC
+    assert result.detail["rule_would_imply"] == "long"
     assert any("JPY" in c and "days before" in c for c in result.caveats)
 
 
@@ -500,7 +501,8 @@ def test_carry_does_not_flag_fresh_legs(monkeypatch):
         "EUR": (2.500, "2026-09-30"), "USD": (3.880, "2026-09-29"),
     }))
     result = carry.compute("EURUSD=X", "2026-09-30")
-    assert result.direction is Direction.SHORT
+    assert result.direction is Direction.DIAGNOSTIC
+    assert result.detail["rule_would_imply"] == "short"
     assert result.detail["differential_pct"] == pytest.approx(-1.38)
     assert not any("days before" in c for c in result.caveats)
 
@@ -551,3 +553,131 @@ def test_momentum_and_carry_agreeing_carries_through():
     direction, why = consensus_direction(results)
     assert direction is Direction.SHORT
     assert "dollar_factor" not in why      # the diagnostic did not vote
+
+
+@pytest.mark.unit
+class TestTheFourthBarIsEnforced:
+    """A signal must carry what it did on OUR instruments, measured not argued.
+
+    ``signals/base.py`` sets four bars for the registry and the fourth -- "does
+    it survive on the instruments we actually trade" -- was argued about for
+    four signals and never tested. Now it is a required field, so a new signal
+    cannot reach the agents with nothing said about it either way.
+    """
+
+    def test_every_registered_signal_states_its_measured_result(self):
+        from tradingagents.signals.registry import REGISTRY
+
+        for signal in REGISTRY:
+            assert signal.our_history.strip(), (
+                f"{signal.name} reaches the agents with no measured result. An "
+                f"empty field reads as a signal with nothing against it rather "
+                f"than one with nothing for it."
+            )
+
+    def test_an_untested_signal_says_so_rather_than_saying_nothing(self):
+        from tradingagents.signals.base import Signal
+
+        bare = Signal(name="x", asset_types=frozenset({"forex"}), paper="p",
+                      mechanism="m", definition="d", deviations=(), fails_when=())
+        assert "NOT YET MEASURED" in bare.provenance()
+
+    def test_the_measured_result_reaches_the_provenance_card(self):
+        from tradingagents.signals.registry import REGISTRY
+
+        for signal in REGISTRY:
+            assert signal.our_history in signal.provenance()
+
+    def test_momentum_records_that_it_did_not_clear_the_hurdle(self):
+        """The finding must survive in the card, not just in a terminal."""
+        from tradingagents.signals import tsmom
+
+        assert "does NOT clear" in tsmom.SIGNAL.our_history
+        assert "did not beat simply holding the basket" in tsmom.SIGNAL.our_history
+
+    def test_carry_records_that_there_is_no_evidence_it_pays(self):
+        from tradingagents.signals import carry
+
+        assert "NO EVIDENCE" in carry.SIGNAL.our_history
+        assert "not that it reliably loses" in carry.SIGNAL.our_history
+
+    def test_the_dollar_factor_records_why_it_cannot_be_scored(self):
+        from tradingagents.signals import dollar_factor
+
+        assert "Not measurable as a strategy" in dollar_factor.SIGNAL.our_history
+
+    def test_the_signal_block_hands_the_agents_the_measured_result(self):
+        """The agents size what the rule says; they must see what it has done."""
+        from tradingagents.signals.registry import build_signal_block
+
+        block = build_signal_block("EURUSD=X", "2026-09-30", "forex")
+        assert "Measured on our own history" in block
+
+
+@pytest.mark.unit
+class TestCarryWasDemotedOnTheEvidence:
+    """It failed the fourth bar, so it informs the debate and cannot decide it.
+
+    The demotion has to hold in three places or it is cosmetic: the reading
+    itself must not be directional, the registry must not let it vote, and the
+    rule must remain measurable so promoting it back is testable rather than a
+    matter of opinion.
+    """
+
+    def _fresh(self, monkeypatch):
+        monkeypatch.setattr(carry, "_fetch_rate", _fake_fred({
+            "EUR": (2.500, "2026-09-30"), "USD": (3.880, "2026-09-29"),
+        }))
+
+    def test_the_reading_is_diagnostic_and_so_cannot_set_direction(self, monkeypatch):
+        self._fresh(monkeypatch)
+        result = carry.compute("EURUSD=X", "2026-09-30")
+        assert result.direction is Direction.DIAGNOSTIC
+        assert result.sets_direction is False
+
+    def test_the_differential_is_still_reported(self, monkeypatch):
+        """The financing cost is a real fact and the trader has used it well."""
+        self._fresh(monkeypatch)
+        result = carry.compute("EURUSD=X", "2026-09-30")
+        assert result.value == pytest.approx(-1.38)
+        assert result.detail["EUR_rate"] == 2.500
+
+    def test_what_the_rule_would_have_said_is_recorded_for_audit(self, monkeypatch):
+        self._fresh(monkeypatch)
+        result = carry.compute("EURUSD=X", "2026-09-30")
+        assert result.detail["rule_would_imply"] == "short"
+
+    def test_the_reading_says_in_words_that_it_is_not_a_trade(self, monkeypatch):
+        self._fresh(monkeypatch)
+        result = carry.compute("EURUSD=X", "2026-09-30")
+        assert any("context, not a trade" in c for c in result.caveats)
+        assert any("did not survive our own history" in c for c in result.caveats)
+
+    def test_it_does_not_vote_in_the_consensus(self, monkeypatch):
+        """A diagnostic that was allowed to vote would be a demotion in name only."""
+        from tradingagents.signals.base import SignalResult
+        from tradingagents.signals.registry import consensus_direction
+
+        momentum = SignalResult(name="time_series_momentum", direction=Direction.SHORT)
+        differential = SignalResult(name=carry.NAME, direction=Direction.DIAGNOSTIC)
+        side, why = consensus_direction([momentum, differential])
+        assert side is Direction.SHORT
+        assert carry.NAME not in why
+
+    def test_the_directional_rule_is_still_measurable(self):
+        """Promotion back must be testable, not a matter of opinion.
+
+        ``decide`` is untouched and the backtest still reads a direction from
+        it, so re-running the sweep after getting forward discounts answers the
+        question with a number.
+        """
+        from tradingagents.signals import backtest as bt
+
+        assert carry.decide("EUR", "USD", 2.5, 3.88)[0] is Direction.SHORT
+        assert carry.NAME in bt.READERS
+        assert carry.NAME not in bt.NOT_BACKTESTABLE
+
+    def test_the_demotion_is_recorded_where_a_reader_will_find_it(self):
+        assert "DEMOTED" in carry.SIGNAL.our_history
+        assert "does NOT set direction" in carry.SIGNAL.definition
+        assert "no longer sets direction" in carry.__doc__

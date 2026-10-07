@@ -14,6 +14,28 @@ logger = logging.getLogger(__name__)
 YAHOO_HOST = "https://query2.finance.yahoo.com"
 
 
+def read_cached_csv(path: str):
+    """A cached CSV, or None when the file cannot serve as a cache hit.
+
+    A cache file can be truncated to nothing -- an interrupted write, a full
+    disk, something outside the process. ``pd.read_csv`` raises
+    ``EmptyDataError`` on a file with not even a header row, which happens
+    before any ``.empty`` check the caller makes and so escapes as an exception
+    from what should be a cache miss. Returning None puts a zero-byte file in
+    the same category as an empty one: refetch, rather than fail or serve it.
+    """
+    import pandas as pd
+
+    try:
+        return pd.read_csv(path, on_bad_lines="skip", encoding="utf-8")
+    except pd.errors.EmptyDataError:
+        logger.warning("Cache file %s is empty; refetching.", path)
+        return None
+    except (OSError, UnicodeDecodeError, pd.errors.ParserError) as exc:
+        logger.warning("Cache file %s is unreadable (%s); refetching.", path, exc)
+        return None
+
+
 def raise_for_empty(symbol: str, canonical: str, what: str) -> None:
     """Report an empty Yahoo answer as an absence, or as an outage if it is one.
 

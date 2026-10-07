@@ -123,6 +123,12 @@ class Signal:
     definition: str
     deviations: tuple[str, ...]
     fails_when: tuple[str, ...]
+    # The fourth bar, measured rather than argued: what this rule actually did
+    # on the instruments we trade. Required, and never empty -- a signal that
+    # has not been tested must say so in words, because an absent field reads
+    # downstream as a signal with nothing against it rather than one with
+    # nothing for it. ``backtest_signals.py`` produces the numbers that go here.
+    our_history: str = ""
     compute: object = None
 
     def applies_to(self, asset_type: str) -> bool:
@@ -142,6 +148,10 @@ class Signal:
         if self.fails_when:
             lines.append("- Known to fail when:")
             lines += [f"  - {f}" for f in self.fails_when]
+        # Last, and deliberately so: it is the only line here that is evidence
+        # about our own instruments rather than about someone else's sample.
+        lines.append(f"- Measured on our own history: "
+                     f"{self.our_history or 'NOT YET MEASURED on our instruments'}")
         return "\n".join(lines)
 
 

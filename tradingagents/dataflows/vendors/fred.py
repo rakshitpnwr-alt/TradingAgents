@@ -153,6 +153,54 @@ def _request(path: str, params: dict) -> dict:
     return response.json()
 
 
+def get_series_observations(
+    indicator: str,
+    start_date: str,
+    end_date: str,
+    vintage: str | None = None,
+) -> list[tuple[str, float]]:
+    """A FRED series as ``(observation date, value)`` pairs, oldest first.
+
+    ``get_macro_data`` renders a report for an agent to read and shows only the
+    most recent ``MAX_ROWS`` observations, so it cannot answer "what was this
+    rate on every date in the last twenty years". This returns the series
+    itself, for callers doing arithmetic over a history rather than reading a
+    summary.
+
+    ``vintage`` pins the data to what had been published by that date, exactly
+    as ``as_of_date`` does in ``get_macro_data``. Left as ``None`` the latest
+    revision of every observation is returned, which is a deliberate choice a
+    caller has to make: it is correct for a series that is never revised (an
+    overnight policy rate), and it is a small look-ahead for one that is.
+
+    Missing observations, which FRED encodes as ".", are dropped rather than
+    interpolated: a caller asking for a rate history should see the dates the
+    rate actually exists on.
+    """
+    series_id = _resolve_series_id(indicator)
+    params = {
+        "series_id": series_id,
+        "observation_start": start_date,
+        "observation_end": end_date,
+        "sort_order": "asc",
+    }
+    if vintage:
+        pit = min(vintage, _fred_today())
+        params.update({"realtime_start": pit, "realtime_end": pit})
+
+    observations = _request("series/observations", params).get("observations", [])
+    points: list[tuple[str, float]] = []
+    for observation in observations:
+        value = observation.get("value")
+        if value in (".", None, ""):
+            continue
+        try:
+            points.append((observation["date"], float(value)))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return points
+
+
 def get_macro_data(
     indicator: str,
     as_of_date: str,

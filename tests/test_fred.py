@@ -287,3 +287,97 @@ def test_error_without_the_key_in_its_message_still_drops_the_request():
          pytest.raises(rq.Timeout) as caught:
         fred._request("series", {"series_id": "DGS10"})
     assert caught.value.request is None
+
+
+@pytest.mark.unit
+class FredRawObservationTests(unittest.TestCase):
+    """``get_series_observations``: the series itself, for callers doing
+    arithmetic over a history rather than reading a report."""
+
+    def test_returns_dated_floats_oldest_first(self):
+        with mock.patch.object(fred, "_request", side_effect=_request_stub()):
+            points = fred.get_series_observations("unemployment", "2025-01-01", "2025-12-31")
+        self.assertEqual(points, [("2025-06-01", 4.1), ("2025-07-01", 4.3), ("2025-09-01", 4.4)])
+
+    def test_missing_observations_are_dropped_not_interpolated(self):
+        """A rate history should show the dates the rate actually exists on."""
+        with mock.patch.object(fred, "_request", side_effect=_request_stub()):
+            points = fred.get_series_observations("unemployment", "2025-01-01", "2025-12-31")
+        self.assertNotIn("2025-08-01", [d for d, _ in points])
+
+    def test_an_unparseable_value_is_skipped_rather_than_crashing_the_history(self):
+        obs = {"observations": [{"date": "2025-06-01", "value": "4.1"},
+                                {"date": "2025-07-01", "value": "n/a"},
+                                {"date": "2025-08-01", "value": "4.2"}]}
+        with mock.patch.object(fred, "_request", side_effect=_request_stub(obs=obs)):
+            points = fred.get_series_observations("DFF", "2025-01-01", "2025-12-31")
+        self.assertEqual([v for _, v in points], [4.1, 4.2])
+
+    def test_the_whole_series_is_returned_not_just_the_recent_rows(self):
+        """``get_macro_data`` shows the last MAX_ROWS; a history needs all of them."""
+        obs = {"observations": [
+            {"date": f"2020-{m:02d}-01", "value": str(m)} for m in range(1, 13)
+        ] * 5}
+        with mock.patch.object(fred, "_request", side_effect=_request_stub(obs=obs)):
+            points = fred.get_series_observations("DFF", "2000-01-01", "2025-12-31")
+        self.assertGreater(len(points), fred.MAX_ROWS)
+
+    def test_the_window_is_passed_through_to_fred(self):
+        captured = {}
+
+        def _capture(path, params):
+            captured.update(params)
+            return _OBS if path == "series/observations" else _META
+
+        with mock.patch.object(fred, "_request", side_effect=_capture):
+            fred.get_series_observations("DFF", "2001-03-04", "2020-05-06")
+        self.assertEqual(captured["observation_start"], "2001-03-04")
+        self.assertEqual(captured["observation_end"], "2020-05-06")
+        self.assertEqual(captured["sort_order"], "asc")
+
+    def test_no_vintage_is_pinned_unless_one_is_asked_for(self):
+        """The caller decides; silently pinning would hide which it got."""
+        captured = {}
+
+        def _capture(path, params):
+            captured.update(params)
+            return _OBS
+
+        with mock.patch.object(fred, "_request", side_effect=_capture):
+            fred.get_series_observations("DFF", "2001-01-01", "2020-01-01")
+        self.assertNotIn("realtime_start", captured)
+
+    def test_a_vintage_pins_both_realtime_bounds(self):
+        captured = {}
+
+        def _capture(path, params):
+            captured.update(params)
+            return _OBS
+
+        with mock.patch.object(fred, "_request", side_effect=_capture):
+            fred.get_series_observations("DFF", "2001-01-01", "2020-01-01", vintage="2015-07-01")
+        self.assertEqual(captured["realtime_start"], "2015-07-01")
+        self.assertEqual(captured["realtime_end"], "2015-07-01")
+
+    def test_a_future_vintage_is_clamped_to_freds_own_today(self):
+        """FRED 400s on a realtime date in its future, which would drop the series."""
+        captured = {}
+
+        def _capture(path, params):
+            captured.update(params)
+            return _OBS
+
+        with mock.patch.object(fred, "_request", side_effect=_capture), \
+                mock.patch.object(fred, "_fred_today", return_value="2026-01-01"):
+            fred.get_series_observations("DFF", "2001-01-01", "2030-01-01", vintage="2030-01-01")
+        self.assertEqual(captured["realtime_start"], "2026-01-01")
+
+    def test_a_bad_indicator_raises_rather_than_returning_an_empty_history(self):
+        """An empty list would read as 'this rate does not exist', which is a lie."""
+        with self.assertRaises(ValueError):
+            fred.get_series_observations("bank of japan rate", "2020-01-01", "2020-12-31")
+
+    def test_an_empty_window_is_an_empty_history(self):
+        with mock.patch.object(fred, "_request",
+                               side_effect=_request_stub(obs={"observations": []})):
+            self.assertEqual(fred.get_series_observations("DFF", "2020-01-01", "2020-12-31"), [])

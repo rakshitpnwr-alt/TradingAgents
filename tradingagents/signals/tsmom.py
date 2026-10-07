@@ -213,5 +213,23 @@ SIGNAL = Signal(
         "management, where 1/sigma sizing implies a position the liquidity "
         "cannot support and the trend itself is a policy choice.",
     ),
+    our_history=(
+        "Measured on our nine instruments, 25 years of daily closes to October "
+        "2026, rebalanced every 21 trading days, costs charged, execution one "
+        "bar after formation: pooled Sharpe 0.55, t=2.93. That does NOT clear "
+        "the 3.0 hurdle, and it did not beat simply holding the basket, which "
+        "returned 0.57 over the same bars. The result is also concentrated "
+        "rather than broad: across the seven FX majors the median Sharpe was "
+        "+0.06 (range -0.26 to +0.37), gold returned 0.48 against its own "
+        "buy-and-hold of 0.69, and BTC-USD alone returned 1.05 at t=4.21 -- in "
+        "a market that rose roughly a hundredfold over the sample, where a "
+        "trend rule and a long position are hard to tell apart. Robust to the "
+        "execution assumption: pooled Sharpe was 0.54 / 0.55 / 0.55 at zero, "
+        "one and two bars of lag, so none of it depends on trading at a close "
+        "the rule is still computing from. Read this as a consistency anchor "
+        "that has not been shown to add return -- it reliably gives the same "
+        "answer twice, which is what it was built for, and that is a different "
+        "claim from paying."
+    ),
     compute=compute,
 )

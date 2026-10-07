@@ -1,9 +1,9 @@
 [
   {
-    "ticker": "BTC-USD",
-    "asset_type": "crypto",
+    "ticker": "EURUSD",
+    "asset_type": "forex",
     "decision": "Underweight",
-    "seconds": 241,
-    "report": "phase0_reports/BTC-USD/2026-09-30/complete_report.md"
+    "seconds": 472,
+    "report": "phase0_reports/EURUSD/2026-10-06/complete_report.md"
   }
 ]
