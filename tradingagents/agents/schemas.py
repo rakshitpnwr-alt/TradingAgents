@@ -258,8 +258,47 @@ class PortfolioDecision(BaseModel):
         default=None,
         description="Optional recommended holding period, e.g. '3-6 months'.",
     )
+    # The executable instruction. These live here, on the FINAL authority's
+    # output, rather than only on the trader's proposal, because the trader
+    # proposes and this decides -- and a system with levels in one place and the
+    # rating in another has no single instruction anyone could act on. They are
+    # also what makes the decision scoreable: the memory log stores this
+    # render, so a level stated here can be measured against what the price
+    # actually did, and a level stated only upstream cannot.
+    entry_price: float | None = Field(
+        default=None,
+        description=(
+            "The price to enter at, as an absolute number in the instrument's "
+            "quote currency (e.g. 1.1280), never a percentage or a range. Carry "
+            "the trader's level forward unless you have a stated reason to "
+            "change it, in which case give yours. Omit it for a Hold, or when "
+            "no specific level can be justified."
+        ),
+    )
+    stop_loss: float | None = Field(
+        default=None,
+        description=(
+            "The price at which this call is wrong and the position is closed, "
+            "as an absolute number in the quote currency, never a percentage. "
+            "It must sit BELOW the entry for a long (Buy / Overweight) and "
+            "ABOVE it for a short (Sell / Underweight). Omit it for a Hold, or "
+            "if you are deliberately proposing a position with no stop -- but "
+            "say so in the thesis if you are."
+        ),
+    )
+    risk_percent: float | None = Field(
+        default=None,
+        description=(
+            "How much of the whole portfolio is lost if the stop is hit, as a "
+            "number of percent (e.g. 1.5 for 1.5%), not a fraction and not a "
+            "range. This is risk, not position size: a 1.5 here with a stop 2% "
+            "away implies a position of roughly 75% of portfolio value. Omit it "
+            "for a Hold or when you cannot state a single figure."
+        ),
+    )
 
-    @field_validator("price_target", mode="before")
+    @field_validator("price_target", "entry_price", "stop_loss", "risk_percent",
+                     mode="before")
     @classmethod
     def _nullish_float_to_none(cls, v):
         return _coerce_optional_float(v)
@@ -285,6 +324,13 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
     target = decision.price_target if decision.price_target is not None else "not provided"
     parts.extend(["", f"**Price Target**: {target}"])
     parts.extend(["", f"**Time Horizon**: {decision.time_horizon or 'not provided'}"])
+    # The executable instruction, in a fixed shape. ``trade_plan.parse_plan``
+    # reads these back out of the memory log, so the labels and the literal
+    # "not provided" are a parsing contract, not just presentation.
+    for label, value in (("Entry Price", decision.entry_price),
+                         ("Stop Loss", decision.stop_loss),
+                         ("Risk Percent", decision.risk_percent)):
+        parts.extend(["", f"**{label}**: {value if value is not None else 'not provided'}"])
     return "\n".join(parts)
 
 

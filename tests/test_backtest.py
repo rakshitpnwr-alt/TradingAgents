@@ -304,3 +304,226 @@ def test_a_ticker_or_date_given_twice_runs_and_settles_once(tmp_path):
     graph = _FakeGraph.instances[-1]
     assert graph.calls == [("NVDA", "2026-01-05")]
     assert graph.settled == ["NVDA"]
+
+
+# ---------------------------------------------------------------------------
+# Scoring the instruction rather than the rating
+# ---------------------------------------------------------------------------
+
+import pandas as pd  # noqa: E402
+
+from tradingagents.agents.schemas import PortfolioDecision, render_pm_decision  # noqa: E402
+import tradingagents.backtest as bt  # noqa: E402
+from tradingagents.backtest import PlanScore, score_log_plans  # noqa: E402
+
+
+def _decision(rating="Sell", entry=1.13, stop=1.153, risk=1.35) -> str:
+    return render_pm_decision(PortfolioDecision(
+        rating=rating, executive_summary="s", investment_thesis="t",
+        entry_price=entry, stop_loss=stop, risk_percent=risk))
+
+
+def _log(tmp_path, decisions) -> str:
+    """A memory log holding the given decisions, written in the stored format."""
+    path = tmp_path / "trading_memory.md"
+    log = TradingMemoryLog({"memory_log_path": str(path)})
+    for i, (ticker, date, text, rating) in enumerate(decisions):
+        log.store_decision(ticker=ticker, trade_date=date,
+                           final_trade_decision=text, rating=rating)
+    return str(path)
+
+
+def _bars(rows) -> pd.DataFrame:
+    return pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close"])
+
+
+STOPPED_PATH = _bars(
+    [("2026-10-07", 1.1240, 1.1310, 1.1235, 1.1305),
+     ("2026-10-08", 1.1305, 1.1560, 1.1300, 1.1550)]
+    + [(f"2026-10-{9 + i:02d}", 1.1000, 1.1060, 1.0950, 1.1000) for i in range(25)])
+
+
+@pytest.mark.unit
+def test_the_three_variants_are_scored_over_the_same_decision(tmp_path):
+    """Their difference is what attributes the result to entry, stop or rating."""
+    path = _log(tmp_path, [("EURUSD", "2026-10-06", _decision(), "Sell")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH)
+    assert summary.decisions == 1
+    assert set(summary.by_variant) == {"as_specified", "market_entry", "rating_only"}
+    assert all(v.trades == 1 for v in summary.by_variant.values())
+
+
+@pytest.mark.unit
+def test_the_stop_is_what_separates_as_specified_from_rating_only(tmp_path):
+    """Same decision, same path: stopped at -1R, or held through to a profit.
+
+    This is the comparison the whole addition exists to make. A trend call
+    entering against an oversold bounce is exactly where honouring the stop
+    converts a winning holding period into a realised loss.
+    """
+    path = _log(tmp_path, [("EURUSD", "2026-10-06", _decision(), "Sell")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH)
+    assert summary.by_variant["as_specified"].expectancy_r == pytest.approx(-1.0)
+    assert summary.by_variant["rating_only"].expectancy_r > 0
+    assert summary.by_variant["as_specified"].stopped == 1
+    assert summary.by_variant["rating_only"].stopped == 0
+
+
+@pytest.mark.unit
+def test_a_limit_that_never_fills_is_counted_as_a_no_fill_not_a_zero(tmp_path):
+    """A plan the market never came back for must not average in as flat."""
+    away = _bars([(f"2026-10-{7 + i:02d}", 1.1200, 1.1250, 1.1180, 1.1200)
+                  for i in range(25)])
+    path = _log(tmp_path, [("EURUSD", "2026-10-06", _decision(), "Sell")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: away)
+    specified = summary.by_variant["as_specified"]
+    assert specified.no_fills == 1
+    assert specified.trades == 0
+    assert specified.expectancy_r is None
+    # Entering at the market does get the trade, which is what the comparison shows.
+    assert summary.by_variant["market_entry"].trades == 1
+
+
+@pytest.mark.unit
+def test_a_hold_is_counted_as_a_hold_rather_than_scored(tmp_path):
+    path = _log(tmp_path, [("EURUSD", "2026-10-06",
+                            _decision(rating="Hold", entry=None, stop=None, risk=None),
+                            "Hold")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH)
+    assert summary.holds == 1
+    assert all(v.trades == 0 for v in summary.by_variant.values())
+
+
+@pytest.mark.unit
+def test_a_decision_with_no_levels_is_reported_as_incomplete(tmp_path):
+    """A system that cannot state its own levels cannot be executed."""
+    path = _log(tmp_path, [("EURUSD", "2026-10-06",
+                            _decision(entry=None, stop=None, risk=None), "Sell")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH)
+    assert summary.incomplete == 1
+    assert all(v.trades == 0 for v in summary.by_variant.values())
+    # Counted once, as incomplete. Falling through to the scorer as well would
+    # double-count it as an unmeasurable trade in all three variants.
+    assert all(v.unmeasured == 0 for v in summary.by_variant.values())
+    assert "cannot be executed" in summary.render()
+
+
+@pytest.mark.unit
+def test_a_contradictory_instruction_is_listed_as_invalid(tmp_path):
+    """A stop on the wrong side would still produce a number. It must not."""
+    path = _log(tmp_path, [("EURUSD", "2026-10-06",
+                            _decision(entry=1.13, stop=1.10), "Sell")])
+    summary = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH)
+    assert len(summary.invalid) == 1
+    assert "wrong side" in summary.invalid[0][2]
+
+
+@pytest.mark.unit
+def test_the_report_names_whether_the_trade_craft_added_or_cost(tmp_path):
+    path = _log(tmp_path, [("EURUSD", "2026-10-06", _decision(), "Sell")])
+    text = score_log_plans(path, horizon=5, bars_for=lambda t, d: STOPPED_PATH).render()
+    assert ("trade craft ADDED" in text) or ("trade craft COST" in text)
+
+
+@pytest.mark.unit
+class TestPlanScoreArithmetic:
+    def test_expectancy_is_the_mean_r_per_trade_taken(self):
+        """Per trade taken, not per plan attempted.
+
+        Dividing by attempts would quietly reward a system for the plans the
+        market never let it enter, which is the opposite of informative.
+        """
+        score = PlanScore(variant="x", r_multiples=[-1.0, 2.0, -1.0, 1.0], no_fills=6)
+        assert score.expectancy_r == pytest.approx(0.25)
+        assert score.total_r == pytest.approx(1.0)
+
+    def test_win_rate_counts_trades_not_days(self):
+        score = PlanScore(variant="x", r_multiples=[-1.0, 2.0, -1.0, 1.0])
+        assert score.win_rate == pytest.approx(0.5)
+
+    def test_the_fill_rate_has_no_fills_in_its_denominator(self):
+        score = PlanScore(variant="x", r_multiples=[1.0, 1.0], no_fills=2)
+        assert score.fill_rate == pytest.approx(0.5)
+
+    def test_nothing_taken_reports_nothing_rather_than_zero(self):
+        score = PlanScore(variant="x")
+        assert score.expectancy_r is None
+        assert score.win_rate is None
+        assert score.t_stat is None
+        assert score.fill_rate is None
+
+    def test_a_single_trade_has_no_t_statistic(self):
+        """One observation cannot be distinguished from luck at all."""
+        assert PlanScore(variant="x", r_multiples=[3.0]).t_stat is None
+
+    def test_identical_trades_have_no_t_statistic(self):
+        """No spread means no inference, not infinite confidence."""
+        assert PlanScore(variant="x", r_multiples=[1.0, 1.0, 1.0]).t_stat is None
+
+    def test_portfolio_return_compounds(self):
+        score = PlanScore(variant="x", portfolio_returns=[0.01, 0.01])
+        assert score.portfolio_total == pytest.approx(1.01 * 1.01 - 1.0)
+
+    def test_no_stated_sizes_means_no_portfolio_figure(self):
+        assert PlanScore(variant="x", r_multiples=[1.0]).portfolio_total is None
+
+
+@pytest.mark.unit
+class TestForwardBars:
+    """The bars a decision is scored against: strictly after it, and raw.
+
+    Off by one here and the decision is scored partly against the close it was
+    formed from, which is the one place in this codebase where looking forward
+    is correct and so the one place a boundary error looks like nothing.
+    """
+
+    def _frame(self):
+        return pd.DataFrame({
+            "Date": pd.to_datetime(["2026-10-05", "2026-10-06", "2026-10-07",
+                                    "2026-10-08", "2026-10-09"]),
+            "Open": [1.0, 1.1, 1.2, 1.3, 1.4],
+            "High": [1.0, 1.1, 1.2, 1.3, 1.4],
+            "Low": [1.0, 1.1, 1.2, 1.3, 1.4],
+            "Close": [1.0, 1.1, 1.2, 1.3, 1.4],
+        })
+
+    def test_the_decision_date_itself_is_excluded(self, monkeypatch):
+        """The decision is formed from that close, so it cannot trade at it."""
+        import tradingagents.dataflows.vendors.yahoo.ohlcv as ohlcv_mod
+
+        monkeypatch.setattr(ohlcv_mod, "load_ohlcv",
+                            lambda *a, **k: self._frame())
+        bars = bt.forward_bars("EURUSD", "2026-10-06")
+        assert [str(d.date()) for d in bars["Date"]] == [
+            "2026-10-07", "2026-10-08", "2026-10-09"]
+
+    def test_the_bars_are_requested_raw_rather_than_gap_filled(self, monkeypatch):
+        """A carried-forward bar has no true high or low.
+
+        Feeding one to a stop check either invents a trigger or hides one, and
+        both are silent.
+        """
+        import tradingagents.dataflows.vendors.yahoo.ohlcv as ohlcv_mod
+
+        seen = {}
+
+        def spy(ticker, as_of, fill_gaps=True):
+            seen["fill_gaps"] = fill_gaps
+            return self._frame()
+
+        monkeypatch.setattr(ohlcv_mod, "load_ohlcv", spy)
+        bt.forward_bars("EURUSD", "2026-10-06")
+        assert seen["fill_gaps"] is False
+
+    def test_the_lookahead_is_capped(self, monkeypatch):
+        import tradingagents.dataflows.vendors.yahoo.ohlcv as ohlcv_mod
+
+        monkeypatch.setattr(ohlcv_mod, "load_ohlcv", lambda *a, **k: self._frame())
+        assert len(bt.forward_bars("EURUSD", "2026-10-05", lookahead_days=2)) == 2
+
+    def test_a_frame_without_dates_is_refused_rather_than_misread(self, monkeypatch):
+        import tradingagents.dataflows.vendors.yahoo.ohlcv as ohlcv_mod
+
+        monkeypatch.setattr(ohlcv_mod, "load_ohlcv",
+                            lambda *a, **k: pd.DataFrame({"Close": [1.0]}))
+        assert bt.forward_bars("EURUSD", "2026-10-06") is None

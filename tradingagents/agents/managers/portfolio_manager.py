@@ -76,6 +76,13 @@ Write these sections, in this order, starting with the rating on its own line:
 - **Rating**: exactly one of Buy / Overweight / Hold / Underweight / Sell
 - **Executive Summary**: the call and how to act on it
 - **Investment Thesis**: the evidence that decided it, and what would change it
+- **Entry Price**, **Stop Loss**, **Risk Percent**: the executable instruction.
+  You are the final authority on these, not the trader -- carry its levels
+  forward unless you have a stated reason to change them. Absolute prices, not
+  ranges or percentages; the stop below entry for a long and above it for a
+  short. Omit any you cannot justify rather than inventing a round number: a
+  level stated here is measured against what the price actually did, so a
+  guess becomes a recorded bad call.
 
 {NO_EXTERNAL_TOOLS}{get_language_instruction()}"""
 
